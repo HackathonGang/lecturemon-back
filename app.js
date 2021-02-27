@@ -80,26 +80,34 @@ db.serialize(() => {
     .run(`CREATE TABLE IF NOT EXISTS lectures ( 
         lecture_id INTEGER PRIMARY KEY,
         module_id INTEGER NOT NULL,
-        start_date_time TEXT NOT NULL,
-        end_date_time TEXT NOT NULL,
-        survey_sent INTEGER NOT NULL
+        start_date_time INTEGER NOT NULL,
+        end_date_time INTEGER NOT NULL
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS surveys_sent (
+        survey_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        sent INTEGER NOT NULL
     );`, err => {
         if (err) {
           return console.error(err.message);
         }
     })
     // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
-    .run(`CREATE TABLE IF NOT EXISTS courseworks ( 
-         coursework_id INTEGER PRIMARY KEY,
-         module_id INTEGER NOT NULL,
-         start_date_time TEXT NOT NULL,
-         end_date_time TEXT NOT NULL,
-         survey_sent INTEGER NOT NULL
-    );`, err => {
-        if (err) {
-          return console.error(err.message);
-        }
-    })
+    // .run(`CREATE TABLE IF NOT EXISTS courseworks ( 
+    //      coursework_id INTEGER PRIMARY KEY,
+    //      module_id INTEGER NOT NULL,
+    //      start_date_time INTEGER NOT NULL,
+    //      end_date_time INTEGER NOT NULL,
+    //      survey_sent INTEGER NOT NULL
+    // );`, err => {
+    //     if (err) {
+    //       return console.error(err.message);
+    //     }
+    // })
     .run(`CREATE TABLE IF NOT EXISTS survey_templates (
         template_id INTEGER PRIMARY KEY,
         format TEXT NOT NULL
@@ -111,7 +119,7 @@ db.serialize(() => {
     .run(`CREATE TABLE IF NOT EXISTS surveys (
         survey_id INTEGER PRIMARY KEY,
         survey_template INTEGER NOT NULL,
-        date_time TEXT NOT NULL
+        date_time INTEGER NOT NULL
     );`, err => {
         if (err) {
           return console.error(err.message);
@@ -156,21 +164,10 @@ db.serialize(() => {
         if (err) {
           return console.error(err.message);
         }
-        console.log("Successful creation of the 'Books' table");
-    })
-    .get(`SELECT * FROM unis`, function(err, rows) {
-        console.log(rows);
-    })
-    .run(`INSERT INTO unis (extension, name) VALUES ('yes', 'no')`, err => {
-        if (err) {
-          return console.error(err.message);
-        }
-        console.log("Successful creation of the 'Books' table");
-    })
-    .get(`SELECT * FROM unis`, function(err, rows) {
-        console.log(rows);
     })
 });
+
+db.close();
 
 const Unis = ['durham', 'warwick'];
 
@@ -201,65 +198,64 @@ app.post('/api/signup', function(req, resp) {
         errors[3][0] = 1;
     }
     db = createdb();
-    /*db.run(`INSERT INTO users (first_name, password, uni_email, contact_email) VALUES ('Cameron', 'awikfnaof2r209042', 'emailqq@durham.ac.uk', 'cameronghm@gmail.com')`, err => {
-        if (err) {
-            return console.error(err.message);
-        }
-        console.log("Successful creation of the 'Books' table");
-    })*/
-    const uni_email = req.body.uniemail;
-    const duplicate = db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, [uni_email] , function (err, row) {
-        console.log(row);
-        if (row != undefined) {
-            return 1;
+    let duplicate;
+    db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, [req.body.uniemail] , function (err, row) {
+        //console.log(row);
+        if (row !== undefined) {
+            valid(1);
         }
         else {
-            return 0;
+            valid(0);
         }
-    });
-    db.close();
-    errors[4][0] = duplicate;
-    console.log(errors);
-    //Validating User Email
-    if (!req.body.useremail) {
-        req.body.useremail = user.body.uniemail;
-    }
-    if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
-        errors[5][0] = 1;
-    }
-    for (let error = 0; error < errors.length; error++) {
-        if (errors[error][0] == 1) {
-            errorlist.push({error:errors[error][2], errorField:errors[error][1]})
+        })
+    
+    function valid (duplicate) {
+        db.close();
+        errors[4][0] = duplicate;
+        console.log(errors);
+        //Validating User Email
+        if (!req.body.useremail) {
+            req.body.useremail = user.body.uniemail;
         }
-    }
-
-    if (errorlist.length > 0) {
-        resp.status(400).json(errorlist);
-        return;
-    }
-    //Splitting Name
-    const first_name = req.body.name.split(' ')[0];
-    const contact_email = req.body.useremail;
-    const uni = req.body.uni;
-    let last_name = '';
-    if (req.body.name.split(' ')[1]) {
-        last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
-    }
-    //Adding data to database
-    db = createdb();
-    console.log(req.body);
-    bcrypt.hash(req.body.password, 10, function(err, hash) {
-        db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
-        VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
-            if (err) {
-              return console.error(err.message);
+        if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
+            errors[5][0] = 1;
+        }
+        for (let error = 0; error < errors.length; error++) {
+            if (errors[error][0] == 1) {
+                errorlist.push({error:errors[error][2], errorField:errors[error][1]})
             }
-        });
-        resp.sendStatus(200);
-    });
-    db.all(`SELECT * FROM users`, function (err, rows) {
-        console.log(rows);
-    })
+        }
+
+        if (errorlist.length > 0) {
+            resp.status(400).json(errorlist);
+            return;
+        }
+        //Splitting Name
+        const first_name = req.body.name.split(' ')[0];
+        const uni_email = req.body.uniemail;
+        const contact_email = req.body.useremail;
+        const uni = req.body.uni;
+        let last_name = '';
+        if (req.body.name.split(' ')[1]) {
+            last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
+        }
+        //Adding data to database
+        db = createdb();
+        console.log(req.body);
+        
+        bcrypt.hash(req.body.password, 10, function(err, hash) {
+            db.serialize(() => {
+                db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
+                VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
+                    if (err) {
+                        return console.error(err.message);
+                    }
+                });
+                resp.sendStatus(200);
+                db.close();
+            })
+        }); 
+    }   
 });
 
 //POST Signin
@@ -270,22 +266,24 @@ app.post('/api/signin', function(req, resp) {
     if (!req.body.password) {
         resp.json({"error-field":"password", "error": "Need to enter a password"});
     }
-    db.get(`SELECT uni_email, password, user_id, name FROM users WHERE uni_email = ?`, [req.body.uni_email],  function (err, row) {
+    db = createdb();
+    db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
+        console.log(row);
         if (row == undefined) {
             resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
         }
         else {
-            bcrypt.hash(req.body.password, 10, function(err, hash) {
-                bcrypt.compare(row.password, hash, function(err, result) {
+            //bcrypt.hash(req.body.password, 10, function(err, hash) {
+                bcrypt.compare(req.body.password, row.password, function(err, result) {
                     if (result) {
-                        req.session = {userid: row.user_id};
+                        req.session.userid = row.user_id;
                         resp.status(200).json({"name": row.name, "id":row.user_id});
                     }
                     else {
                         resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
                     }
                 });
-            });
+            //});
         }
     });
 });
