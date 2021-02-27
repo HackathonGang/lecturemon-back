@@ -391,7 +391,11 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
                 (lecture_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`);
+                (${target},  "${survey_id}", ${req.answers});`, err => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
             });
 
         } else if (target_type == "module") {
@@ -404,7 +408,11 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO module_responses 
                 (module_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`);
+                (${target},  "${survey_id}", ${req.answers});`, err => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
             });
 
         } else {
