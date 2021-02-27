@@ -94,6 +94,7 @@ db.serialize(() => {
     );`, err => {
         if (err) {
           return console.error(err.message);
+        }
     })
     // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
     // .run(`CREATE TABLE IF NOT EXISTS courseworks ( 
