@@ -4,29 +4,45 @@ const app = express();
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const uuid = require('uuid');
+const validator = require('validator');
 
 app.use(express.json);
 app.use(session({
     
 }))
 
-const Users = [];
+const Unis = ['durham', 'warwick'];
 
 app.post('/api/signup', function(req, resp) {
-    if (!req.body.name || !req.body.password || !req.body.confirmpassword || !req.body.uniemail || !req.body.useremail) {
-        resp.json()
-    } else if (req.body.password != req.body.password) {
-        resp.status('400');
-        resp.send("Password is not equal to confirm password");
+    if (!(req.body.name) || !(validator.isAlphanumeric(req.body.name))) {
+        resp.json({"error-field":"name", "error": "Need a valid name"});
     }
-
-    const uni = (req.body.uniemail.split('@')[1]).split('.')[0];
+    if (!validator.isStrongPassword(req.body.password)) {
+        resp.json({"error-field":"password", "error": "Need a valid password (minimum length 8, must have at least one uppercase, lowercase and symbol)"});
+    }
+    if (!Unis.includes((req.body.uni).toLowerCase())) {
+        resp.json({"error-field":"uni", "error": "Need a valid Uni"});
+    }
+    if (!(validator.isEmail(req.body.uniemail)) || !(validator.contains(req.body.uniemail, '.ac.uk'))) { //Add check for uni email address to selected uni
+        resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
+    }
+    if (validator.isEmpty(req.body.useremail)) {
+        req.body.useremail = user.body.uniemail;
+    }
+    if ((!validator.isEmpty(req.body.useremail)) && (!validator.isEmail(req.body.useremail))) {
+        resp.json({"error-field":"useremail", "error": "Need a User Email"});
+    }
+    
     const name = req.body.name;
-    const password = req.body.password
-    if (password != /fa/) {
-        resp.json({'error-field':'password', 'error': 'Need to follow format'})
-    }
+    const password = req.body.password;
 });
+
+app.post('/api/signin'), function(req, resp) {
+    if (!(validator.isEmail(req.body.uniemail)) || !(validator.contains(req.body.uniemail, '.ac.uk'))) { //Add check for uni email address to selected uni
+        resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
+    }
+    // Database comparing stuff for username and password
+}
 
 //Database Stuff
 const path = require('path');
