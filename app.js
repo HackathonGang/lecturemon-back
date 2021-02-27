@@ -43,7 +43,7 @@ db.serialize(() => {
         uni_id INTEGER NOT NULL,
         module_code TEXT NOT NULL,
         lecturer_id INTEGER NOT NULL
-    )`);
+    )`); // in future add course_id and year?
     db.run(`CREATE TABLE IF NOT EXISTS lecturers ( 
         lecturer_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL
@@ -154,10 +154,50 @@ app.post('/api/signup', function(req, resp) {
     }
 });
 
+app.get('/api/timetable', function(req, resp) {
+    // returns users lectures in the following form:
+    // {
+    //      "module_code": [(lecture1_starttime, lecture1_endtime), (lecture2_starttime, lecture2_endtime)],
+    //      "module_code": ...    
+    //}
 
+
+    // grab module IDs from module_lookup
+    // grab their start/end/names times from module
+    // return a json containging module name, list of tuples for lectures
+    let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READ, (err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+
+    let moduleIDs = [];
+    let jsonDict = {};
+    
+    db.serialize(() =>{
+        db.each(`SELECT (module_id) FROM module_lookup WHERE user_id = ${req.user_id}`, (err, row) => {
+            moduleIDs.push(row[0]);
+        });
+        moduleIDs.forEach(id => {
+            let code = db.get(`SELECT (module_code) FROM modules WHERE module_id = ${id}`)[0];
+            jsonDict[code] = [];
+            db.each(`SELECT (date_time_start, date_time_end) FROM lectures WHERE module_id = ${id}`, (err, row) => {
+                jsonDict[code].push((row[0], row[1]));
+            });
+        });
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+
+    resp.status(200);
+    resp.send(JSON.stringify(jsonDict));
+});
 
 app.post('/api/surveyresponse', function(req, resp) {
-
     if (v.validate(req, responseSchema)) {
         let survey_id   = req.survey_id;
         let target      = req.target;
