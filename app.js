@@ -3,17 +3,21 @@ const express = require('express');
 const app = express();
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const uuid = require('uuid');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const { json } = require('body-parser');
+const json = require('body-parser');
+const FileStore = require('session-file-store')(session);
 
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
-
+    secret: '4dcb417e-381e-42cf-8f6a-5f0244bddb3c',
+    resave: false,
+    saveUninitialized: false,
+    store: new FileStore,
+    cookie: { maxAge: 3600000,secure: false, httpOnly: true }
 }))
 
 const Unis = ['durham', 'warwick'];
@@ -42,11 +46,11 @@ app.post('/api/signup', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail)) || !(req.body.uniemail.includes(req.body.uni))) { //Add check for uni email address to selected uni
         errors[3][0] = 1;
     }
-    /*db.get(`SELECT uni_email FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
+    db.get(`SELECT uni_email FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
         if (row != undefined) {
             errors[4][0] = True;
         }
-    });*/
+    });
     //Validating User Email
     if (!req.body.useremail) {
         req.body.useremail = user.body.uniemail;
@@ -72,22 +76,22 @@ app.post('/api/signup', function(req, resp) {
         last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
     }
     //Adding data to database
-    /*bcrypt.hash(req.body.password, 10, function(err, hash) {
+    bcrypt.hash(req.body.password, 10, function(err, hash) {
         db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
         VALUES (${first_name}, ${last_name}, ${req.body.uniemail}, ${req.body.useremail}, ${hash}));`)
-    });*/
+    });
     //Sending OK response
     resp.sendStatus(200);
 });
 
-/*app.post('/api/signin', function(req, resp) {
-    if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) { //Add check for uni email address to selected uni
+app.post('/api/signin', function(req, resp) {
+    if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) {
         resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
     }
     if (!req.body.password) {
         resp.json({"error-field":"password", "error": "Need to enter a password"});
     }
-    db.get(`SELECT uni_email, password FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
+    db.get(`SELECT uni_email, password, user_id, name FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
         if (row == undefined) {
             resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
         }
@@ -95,15 +99,16 @@ app.post('/api/signup', function(req, resp) {
             bcrypt.hash(req.body.password, 10, function(err, hash) {
                 bcrypt.compare(row.password, hash, function(err, result) {
                     if (result) {
-                        
+                        req.session = {userid: row.user_id};
+                        resp.status(200).json({"name": row.name, "id":row.user_id});
                     }
                     else {
-                        resp.json({"error-field":"password", "error": "Incorrect Password"});
+                        resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
                     }
-                })
+                });
             });
         }
     });
-});*/
+});
 
 module.exports = app;
