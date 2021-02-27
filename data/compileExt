@@ -1,1 +1,0 @@
-gcc -g -fPIC -shared json1.c -o json1.so

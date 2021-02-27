@@ -1,4 +1,4 @@
-//Routing and Session Stuff
+//------------- Routing and Session Stuff -------------
 const express = require('express');
 const app = express();
 const session = require('express-session');
@@ -20,18 +20,22 @@ app.use(session({
     cookie: { maxAge: 3600000,secure: false, httpOnly: true }
 }))
 
-//Database Stuff
+//------------- Database Stuff -------------
 const path = require('path');
 const dbPath = path.resolve(__dirname, 'data/data.db');
 const sqlite3 = require('sqlite3').verbose(); // verbose gives longer traces in case of error
 const extPath = path.resolve(__dirname, 'data/json1.so');
-  
-let db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        return console.error(err.message);
-    }
-});
 
+function createdb () {
+    let db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+    return db;
+}
+
+db = createdb();
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         user_id INTEGER PRIMARY KEY,
@@ -41,87 +45,147 @@ db.serialize(() => {
         contact_email TEXT NOT NULL,
         password TEXT NOT NULL,
         year_group INTEGER
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS module_lookup (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS module_lookup (
         user_id INTEGER NOT NULL,
         module_id INTEGER NOT NULL,
         status INTEGER NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS modules (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS modules (
         module_id INTEGER PRIMARY KEY,
         uni_id INTEGER NOT NULL,
         module_code TEXT NOT NULL,
         lecturer_id INTEGER NOT NULL
-    )`); // in future add course_id and year?
-    db.run(`CREATE TABLE IF NOT EXISTS lecturers ( 
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    }) // in future add course_id and year?
+    .run(`CREATE TABLE IF NOT EXISTS lecturers ( 
         lecturer_id INTEGER PRIMARY KEY,
         name TEXT NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS lectures ( 
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS lectures ( 
         lecture_id INTEGER PRIMARY KEY,
         module_id INTEGER NOT NULL,
         start_date_time INTEGER NOT NULL,
         end_date_time INTEGER NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS survey_tracker ( 
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS surveys_sent (
         survey_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
         sent INTEGER NOT NULL
-    )`); 
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+    })
     // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
-    // db.run(`CREATE TABLE IF NOT EXISTS courseworks ( 
-    //     coursework_id INTEGER PRIMARY KEY,
-    //     module_id INTEGER NOT NULL,
-    //     start_date_time TEXT NOT NULL,
-    //     start_date_time TEXT NOT NULL,
-    //     survey_sent INTEGER NOT NULL
-    // );`);
-    db.run(`CREATE TABLE IF NOT EXISTS survey_templates (
+    // .run(`CREATE TABLE IF NOT EXISTS courseworks ( 
+    //      coursework_id INTEGER PRIMARY KEY,
+    //      module_id INTEGER NOT NULL,
+    //      start_date_time INTEGER NOT NULL,
+    //      end_date_time INTEGER NOT NULL,
+    //      survey_sent INTEGER NOT NULL
+    // );`, err => {
+    //     if (err) {
+    //       return console.error(err.message);
+    //     }
+    // })
+    .run(`CREATE TABLE IF NOT EXISTS survey_templates (
         template_id INTEGER PRIMARY KEY,
         format TEXT NOT NULL
-    )`); // use a standard format described here: [] to format the strings?
-    db.run(`CREATE TABLE IF NOT EXISTS surveys (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    }) // use a standard format described here: [] to format the strings?
+    .run(`CREATE TABLE IF NOT EXISTS surveys (
         survey_id INTEGER PRIMARY KEY,
         survey_template INTEGER NOT NULL,
         date_time INTEGER NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS lecture_responses (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS lecture_responses (
         response_id INTEGER PRIMARY KEY,
         lecture_id INTEGER NOT NULL,
         survey_id INTEGER  NOT NULL,
         response TEXT NOT NULL
-    )`);
-    // db.run(`CREATE TABLE IF NOT EXISTS coursework_responses (
-    //     response_id INTEGER PRIMARY KEY,
-    //     coursework_id INTEGER NOT NULL,
-    //     module_id INTEGER NOT NULL,
-    //     survey_id INTEGER  NOT NULL,
-    //     response TEXT NOT NULL
-    // );`);
-    db.run(`CREATE TABLE IF NOT EXISTS module_responses (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS coursework_responses (
+        response_id INTEGER PRIMARY KEY,
+        coursework_id INTEGER NOT NULL,
+            module_id INTEGER NOT NULL,
+            survey_id INTEGER  NOT NULL,
+        response TEXT NOT NULL
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS module_responses (
         response_id INTEGER PRIMARY KEY,
         module_id INTEGER NOT NULL,
         survey_id INTEGER  NOT NULL,
         response TEXT NOT NULL
-    )`);
-    db.run(`CREATE TABLE IF NOT EXISTS unis (
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS unis (
         uni_id INTEGER PRIMARY KEY,
         extension TEXT NOT NULL,
         name TEXT NOT NULL
-    )`);
-});
-  
-db.close((err) => {
-    if (err) {
-        return console.error(err.message);
-    }
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+        console.log("Successful creation of the 'Books' table");
+    })
+    .get(`SELECT * FROM unis`, function(err, rows) {
+        console.log(rows);
+    })
+    .run(`INSERT INTO unis (extension, name) VALUES ('yes', 'no')`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+        console.log("Successful creation of the 'Books' table");
+    })
+    .get(`SELECT * FROM unis`, function(err, rows) {
+        console.log(rows);
+    })
 });
 
 const Unis = ['durham', 'warwick'];
 
+//------------- Routing Stuff -------------
+//POST Signup
 app.post('/api/signup', function(req, resp) {
-    errorlist = [];
-    errors = [[0, 'name', 'Need a valid name'],
+    const errorlist = [];
+    var errors = [[0, 'name', 'Need a valid name'],
     [0, 'password', 'Need a valid password (minimum length 8, must have at least one uppercase, lowercase, number and symbol)'],
     [0, 'uni', 'Need a valid Uni'],
     [0, 'uniemail', 'Need a valid uni Email'],
@@ -143,11 +207,25 @@ app.post('/api/signup', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail)) || !(req.body.uniemail.includes(req.body.uni))) { //Add check for uni email address to selected uni
         errors[3][0] = 1;
     }
-    db.get(`SELECT uni_email FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
+    db = createdb();
+    /*db.run(`INSERT INTO users (first_name, password, uni_email, contact_email) VALUES ('Cameron', 'awikfnaof2r209042', 'emailqq@durham.ac.uk', 'cameronghm@gmail.com')`, err => {
+        if (err) {
+            return console.error(err.message);
+        }
+        console.log("Successful creation of the 'Books' table");
+    })*/
+    const duplicate = db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, req.body.uniemail , function (err, row) {
+        console.log(row);
         if (row != undefined) {
-            errors[4][0] = True;
+            return 1;
+        }
+        else {
+            return 0;
         }
     });
+    db.close();
+    errors[4][0] = duplicate;
+    console.log(errors);
     //Validating User Email
     if (!req.body.useremail) {
         req.body.useremail = user.body.uniemail;
@@ -155,7 +233,6 @@ app.post('/api/signup', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
         errors[5][0] = 1;
     }
-
     for (let error = 0; error < errors.length; error++) {
         if (errors[error][0] == 1) {
             errorlist.push({error:errors[error][2], errorField:errors[error][1]})
@@ -168,19 +245,31 @@ app.post('/api/signup', function(req, resp) {
     }
     //Splitting Name
     const first_name = req.body.name.split(' ')[0];
+    const uni_email = req.body.uniemail;
+    const contact_email = req.body.useremail;
+    const uni = req.body.uni;
     let last_name = '';
     if (req.body.name.split(' ')[1]) {
         last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
     }
     //Adding data to database
+    db = createdb();
+    console.log(req.body);
     bcrypt.hash(req.body.password, 10, function(err, hash) {
         db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
-        VALUES (${first_name}, ${last_name}, ${req.body.uniemail}, ${req.body.useremail}, ${hash}));`)
+        VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
+            if (err) {
+              return console.error(err.message);
+            }
+        });
+        resp.sendStatus(200);
     });
-    //Sending OK response
-    resp.sendStatus(200);
+    db.all(`SELECT * FROM users`, function (err, rows) {
+        console.log(rows);
+    })
 });
 
+//POST Signin
 app.post('/api/signin', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) {
         resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
@@ -240,24 +329,9 @@ var responseSchema = {
       "target_type",
       "answers"
     ]
-  }
+};
 
-app.post('/api/signup', function(req, resp) {
-    if (!req.body.name || !req.body.password || !req.body.confirmpassword || !req.body.uniemail || !req.body.useremail) {
-        resp.json()
-    } else if (req.body.password != req.body.confirmpassword) {
-        resp.status('400');
-        resp.send("Password is not equal to confirm password");
-    }
-
-    const uni = (req.body.uniemail.split('@')[1]).split('.')[0];
-    const name = req.body.name;
-    const password = req.body.password
-    if (password != /fa/) {
-        resp.json({'error-field':'password', 'error': 'Need to follow format'})
-    }
-});
-
+//GET Timetable
 app.get('/api/timetable', function(req, resp) {
     // returns users lectures in the following form:
     // {
@@ -301,6 +375,7 @@ app.get('/api/timetable', function(req, resp) {
     resp.send(JSON.stringify(jsonDict));
 });
 
+//POST Survey Response
 app.post('/api/surveyresponse', function(req, resp) {
     if (v.validate(req, responseSchema)) {
         let survey_id   = req.survey_id;
@@ -363,12 +438,12 @@ function addTemplate(title, description, target, target_type, questions) {
         "target": target,
         "target_type": target_type,
         "questions": questions
-    }
+    };
 
 
     // console.log(`INSERT INTO survey_templates (format) VALUES ("${escape(JSON.stringify(structure))}")`);
     let jsonString = escape(JSON.stringify(structure));
-    console.log(jsonString);
+    //console.log(jsonString);
     // db.loadExtension(extPath);
 
     db.serialize(() => {
@@ -380,7 +455,7 @@ function addTemplate(title, description, target, target_type, questions) {
             return console.error(err.message);
         }
     });
-}
+};
 
 
 // addTemplate("Regular survey for [module code]", "", "[module_id]", "lecture", ["How much did you enjoy this lecture?", "slider", [1,5,1,"Not at all", "It was amazing!"]]);
