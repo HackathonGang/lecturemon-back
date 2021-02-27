@@ -207,7 +207,8 @@ app.post('/api/signup', function(req, resp) {
         }
         console.log("Successful creation of the 'Books' table");
     })*/
-    const duplicate = db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, req.body.uniemail , function (err, row) {
+    const uni_email = req.body.uniemail;
+    const duplicate = db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, [uni_email] , function (err, row) {
         console.log(row);
         if (row != undefined) {
             return 1;
@@ -238,7 +239,6 @@ app.post('/api/signup', function(req, resp) {
     }
     //Splitting Name
     const first_name = req.body.name.split(' ')[0];
-    const uni_email = req.body.uniemail;
     const contact_email = req.body.useremail;
     const uni = req.body.uni;
     let last_name = '';
@@ -270,7 +270,7 @@ app.post('/api/signin', function(req, resp) {
     if (!req.body.password) {
         resp.json({"error-field":"password", "error": "Need to enter a password"});
     }
-    db.get(`SELECT uni_email, password, user_id, name FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
+    db.get(`SELECT uni_email, password, user_id, name FROM users WHERE uni_email = ?`, [req.body.uni_email],  function (err, row) {
         if (row == undefined) {
             resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
         }
