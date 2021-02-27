@@ -278,7 +278,7 @@ app.post('/api/signin', function(req, resp) {
     db = createdb();
     db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
         if (row == undefined) {
-            resp.status(400).json({"error-field":"uniemail", "error": "Uni Email not found"});
+            resp.status(400).json([{"error-field":"uniemail", "error": "Uni Email not found"}]);
         }
         else {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
