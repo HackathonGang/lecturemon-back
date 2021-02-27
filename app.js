@@ -165,6 +165,18 @@ db.serialize(() => {
           return console.error(err.message);
         }
     })
+    // .get(`SELECT * FROM unis`, function(err, rows) {
+    //     console.log(rows);
+    // })
+    // .run(`INSERT INTO unis (extension, name) VALUES ('yes', 'no')`, err => {
+    //     if (err) {
+    //       return console.error(err.message);
+    //     }
+    //     console.log("Successful creation of the 'Books' table");
+    // })
+    // .get(`SELECT * FROM unis`, function(err, rows) {
+    //     console.log(rows);
+    // })
 });
 
 db.close();
@@ -273,17 +285,15 @@ app.post('/api/signin', function(req, resp) {
             resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
         }
         else {
-            //bcrypt.hash(req.body.password, 10, function(err, hash) {
-                bcrypt.compare(req.body.password, row.password, function(err, result) {
-                    if (result) {
-                        req.session.userid = row.user_id;
-                        resp.status(200).json({"name": row.name, "id":row.user_id});
-                    }
-                    else {
-                        resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
-                    }
-                });
-            //});
+            bcrypt.compare(req.body.password, row.password, function(err, result) {
+                if (result) {
+                    req.session.userid = row.user_id;
+                    resp.status(200).json({"name": row.name, "id":row.user_id});
+                }
+                else {
+                    resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
+                }
+            });
         }
     });
 });
@@ -382,7 +392,11 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
                 (lecture_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`);
+                (${target},  "${survey_id}", ${req.answers});`, err => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
             });
 
         } else if (target_type == "module") {
@@ -395,7 +409,11 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO module_responses 
                 (module_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`);
+                (${target},  "${survey_id}", ${req.answers});`, err => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
             });
 
         } else {
