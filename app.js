@@ -284,6 +284,7 @@ app.post('/api/signin', function(req, resp) {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
                 if (result) {
                     req.session.userid = row.user_id;
+                    req.session.name = row.first_name + row.last_name;
                     resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
                 else {
@@ -431,13 +432,21 @@ app.post('/api/surveyresponse', function(req, resp) {
 });
 
 app.get('/api/surveys', function(req, resp) {
-    // if (!req.session.user_id) {
-    //     resp.status("440").send("Session expired");
-    // }
-    // let user_id = req.session.user_id;
-    let user_id = 1;
+    if (!req.session.id) {
+        resp.sendStatus("440");
+    }
 
-    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ${user_id}`, (err, rows) => {
+    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
+        console.log(rows);
+    });
+});
+
+app.get('/api/modules', function(req, resp) {
+    if (!req.session.id) {
+        resp.sendStatus("440");
+    }
+
+    db.all(sele)(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
         console.log(rows);
     });
 });
@@ -478,6 +487,14 @@ function addTemplate(title, description, target, target_type, questions) {
     });
 };
 
+app.get('/api/ping', function(req, resp) {
+   if (req.session.id) {
+       resp.json({"id": req.session.id, "name": req.session.name});
+   }
+   else {
+       resp.sendStatus('440');
+   }
+});
 
 // addTemplate("Regular survey for [module code]", "", "[module_id]", "lecture", ["How much did you enjoy this lecture?", "slider", [1,5,1,"Not at all", "It was amazing!"]]);
 
