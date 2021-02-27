@@ -164,20 +164,19 @@ db.serialize(() => {
         if (err) {
           return console.error(err.message);
         }
-        console.log("Successful creation of the 'Books' table");
     })
-    .get(`SELECT * FROM unis`, function(err, rows) {
-        console.log(rows);
-    })
-    .run(`INSERT INTO unis (extension, name) VALUES ('yes', 'no')`, err => {
-        if (err) {
-          return console.error(err.message);
-        }
-        console.log("Successful creation of the 'Books' table");
-    })
-    .get(`SELECT * FROM unis`, function(err, rows) {
-        console.log(rows);
-    })
+    // .get(`SELECT * FROM unis`, function(err, rows) {
+    //     console.log(rows);
+    // })
+    // .run(`INSERT INTO unis (extension, name) VALUES ('yes', 'no')`, err => {
+    //     if (err) {
+    //       return console.error(err.message);
+    //     }
+    //     console.log("Successful creation of the 'Books' table");
+    // })
+    // .get(`SELECT * FROM unis`, function(err, rows) {
+    //     console.log(rows);
+    // })
 });
 
 const Unis = ['durham', 'warwick'];
