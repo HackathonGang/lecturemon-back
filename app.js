@@ -179,6 +179,8 @@ db.serialize(() => {
     // })
 });
 
+db.close();
+
 const Unis = ['durham', 'warwick'];
 
 //------------- Routing Stuff -------------
@@ -208,90 +210,85 @@ app.post('/api/signup', function(req, resp) {
         errors[3][0] = 1;
     }
     db = createdb();
-    /*db.run(`INSERT INTO users (first_name, password, uni_email, contact_email) VALUES ('Cameron', 'awikfnaof2r209042', 'emailqq@durham.ac.uk', 'cameronghm@gmail.com')`, err => {
-        if (err) {
-            return console.error(err.message);
-        }
-        console.log("Successful creation of the 'Books' table");
-    })*/
-    const duplicate = db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, req.body.uniemail , function (err, row) {
-        console.log(row);
-        if (row != undefined) {
-            return 1;
+    let duplicate;
+    db.get(`SELECT uni_email FROM users WHERE uni_email = ?;`, [req.body.uniemail] , function (err, row) {
+        //console.log(row);
+        if (row !== undefined) {
+            valid(1);
         }
         else {
-            return 0;
+            valid(0);
         }
-    });
-    db.close();
-    errors[4][0] = duplicate;
-    console.log(errors);
-    //Validating User Email
-    if (!req.body.useremail) {
-        req.body.useremail = user.body.uniemail;
-    }
-    if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
-        errors[5][0] = 1;
-    }
-    for (let error = 0; error < errors.length; error++) {
-        if (errors[error][0] == 1) {
-            errorlist.push({error:errors[error][2], errorField:errors[error][1]})
+        })
+    
+    function valid (duplicate) {
+        db.close();
+        errors[4][0] = duplicate;
+        //Validating User Email
+        if (!req.body.useremail) {
+            req.body.useremail = user.body.uniemail;
         }
-    }
-
-    if (errorlist.length > 0) {
-        resp.status(400).json(errorlist);
-        return;
-    }
-    //Splitting Name
-    const first_name = req.body.name.split(' ')[0];
-    const uni_email = req.body.uniemail;
-    const contact_email = req.body.useremail;
-    const uni = req.body.uni;
-    let last_name = '';
-    if (req.body.name.split(' ')[1]) {
-        last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
-    }
-    //Adding data to database
-    db = createdb();
-    console.log(req.body);
-    bcrypt.hash(req.body.password, 10, function(err, hash) {
-        db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
-        VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
-            if (err) {
-              return console.error(err.message);
+        if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
+            errors[5][0] = 1;
+        }
+        for (let error = 0; error < errors.length; error++) {
+            if (errors[error][0] == 1) {
+                errorlist.push({error:errors[error][2], errorField:errors[error][1]})
             }
-        });
-        resp.sendStatus(200);
-    });
-    db.all(`SELECT * FROM users`, function (err, rows) {
-        console.log(rows);
-    })
+        }
+
+        if (errorlist.length > 0) {
+            resp.status(400).json(errorlist);
+            return;
+        }
+        //Splitting Name
+        const first_name = req.body.name.split(' ')[0];
+        const uni_email = req.body.uniemail;
+        const contact_email = req.body.useremail;
+        const uni = req.body.uni;
+        let last_name = '';
+        if (req.body.name.split(' ')[1]) {
+            last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
+        }
+        //Adding data to database
+        db = createdb();
+        bcrypt.hash(req.body.password, 10, function(err, hash) {
+            db.serialize(() => {
+                db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
+                VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
+                    if (err) {
+                        return console.error(err.message);
+                    }
+                });
+                resp.sendStatus(200);
+                db.close();
+            })
+        }); 
+    }   
 });
 
 //POST Signin
 app.post('/api/signin', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) {
-        resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
+        resp.status(400).json([{"error-field":"uniemail", "error": "Need a valid uni Email"}]);
     }
     if (!req.body.password) {
-        resp.json({"error-field":"password", "error": "Need to enter a password"});
+        resp.status(400).json([{"error-field":"password", "error": "Need to enter a password"}]);
     }
-    db.get(`SELECT uni_email, password, user_id, name FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
+    db = createdb();
+    db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
         if (row == undefined) {
-            resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
+            resp.status(400).json([{"error-field":"uniemail", "error": "Uni Email not found"}]);
         }
         else {
-            bcrypt.hash(req.body.password, 10, function(err, hash) {
-                bcrypt.compare(row.password, hash, function(err, result) {
-                    if (result) {
-                        req.session = {userid: row.user_id};
-                        resp.status(200).json({"name": row.name, "id":row.user_id});
-                    }
-                    else {
-                        resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
-                    }
-                });
+            bcrypt.compare(req.body.password, row.password, function(err, result) {
+                if (result) {
+                    req.session.userid = row.user_id;
+                    resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
+                }
+                else {
+                    resp.status(400).json([{"error-field":"password", "error": "Incorrect Password"}]);
+                }
             });
         }
     });
