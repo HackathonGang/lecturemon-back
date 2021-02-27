@@ -14,8 +14,7 @@ const Users = [];
 
 app.post('/api/signup', function(req, resp) {
     if (!req.body.name || !req.body.password || !req.body.confirmpassword || !req.body.uniemail || !req.body.useremail) {
-        resp.status('400');
-        resp.send("Invalid Details");
+        resp.json()
     } else if (req.body.password != req.body.password) {
         resp.status('400');
         resp.send("Password is not equal to confirm password");
@@ -23,7 +22,10 @@ app.post('/api/signup', function(req, resp) {
 
     const uni = (req.body.uniemail.split('@')[1]).split('.')[0];
     const name = req.body.name;
-    const password = 
+    const password = req.body.password
+    if (password != /fa/) {
+        resp.json({'error-field':'password', 'error': 'Need to follow format'})
+    }
 });
 
 //Database Stuff
