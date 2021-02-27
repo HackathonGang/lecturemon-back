@@ -270,10 +270,10 @@ app.post('/api/signup', function(req, resp) {
 //POST Signin
 app.post('/api/signin', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) {
-        resp.status(200).json([{"error-field":"uniemail", "error": "Need a valid uni Email"}]);
+        resp.status(400).json([{"error-field":"uniemail", "error": "Need a valid uni Email"}]);
     }
     if (!req.body.password) {
-        resp.status(200).json([{"error-field":"password", "error": "Need to enter a password"}]);
+        resp.status(400).json([{"error-field":"password", "error": "Need to enter a password"}]);
     }
     db = createdb();
     db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
