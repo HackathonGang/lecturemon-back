@@ -433,6 +433,18 @@ app.post('/api/surveyresponse', function(req, resp) {
 
 });
 
+app.get('/api/surveys', function(req, resp) {
+    // if (!req.session.user_id) {
+    //     resp.status("440").send("Session expired");
+    // }
+    // let user_id = req.session.user_id;
+    let user_id = 1;
+
+    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ${user_id}`, (err, rows) => {
+        console.log(rows);
+    });
+});
+
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
         if (err) {
@@ -455,7 +467,11 @@ function addTemplate(title, description, target, target_type, questions) {
     // db.loadExtension(extPath);
 
     db.serialize(() => {
-        db.run(`INSERT INTO survey_templates (format) VALUES ("${jsonString}")`);
+        db.run(`INSERT INTO survey_templates (format) VALUES ("${jsonString}")`, err => {
+            if (err) {
+                console.error(err);
+            }
+        });
     });
 
     db.close((err) => {
