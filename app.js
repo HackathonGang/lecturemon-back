@@ -33,8 +33,17 @@ app.post('/api/signup', function(req, resp) {
         resp.json({"error-field":"useremail", "error": "Need a User Email"});
     }
     
-    const name = req.body.name;
+    const first_name = req.body.name.split(' ')[0];
+    if (req.body.name.split(' ')[1] == undefined) {
+        const last_name = '';
+    }
+    else {
+        const last_name = req.body.name.replace(req.body.name.split(' ')[0], '');
+    }
     const password = req.body.password;
+    db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
+        VALUES (${first_name}, ${last_name}, ${req.body.uniemail}, ${req.body.useremail}, )
+    );`);
 });
 
 app.post('/api/signin'), function(req, resp) {
@@ -46,6 +55,7 @@ app.post('/api/signin'), function(req, resp) {
 
 //Database Stuff
 const path = require('path');
+const e = require('express');
 const dbPath = path.resolve(__dirname, 'data/data.db');
 const sqlite3 = require('sqlite3').verbose(); // verbose gives longer traces in case of error
 
