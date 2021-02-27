@@ -1,0 +1,26 @@
+{
+  "name": "lecturemon-back",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HackathonGang/lecturemon-back.git"
+  },
+  "author": "Cameron Michell and Michal Gagala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HackathonGang/lecturemon-back/issues"
+  },
+  "homepage": "https://github.com/HackathonGang/lecturemon-back#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
