@@ -224,7 +224,6 @@ app.post('/api/signup', function(req, resp) {
     function valid (duplicate) {
         db.close();
         errors[4][0] = duplicate;
-        console.log(errors);
         //Validating User Email
         if (!req.body.useremail) {
             req.body.useremail = user.body.uniemail;
@@ -253,8 +252,6 @@ app.post('/api/signup', function(req, resp) {
         }
         //Adding data to database
         db = createdb();
-        console.log(req.body);
-        
         bcrypt.hash(req.body.password, 10, function(err, hash) {
             db.serialize(() => {
                 db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
@@ -273,14 +270,13 @@ app.post('/api/signup', function(req, resp) {
 //POST Signin
 app.post('/api/signin', function(req, resp) {
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail))) {
-        resp.json({"error-field":"uniemail", "error": "Need a valid uni Email"});
+        resp.status(200).json({"error-field":"uniemail", "error": "Need a valid uni Email"});
     }
     if (!req.body.password) {
-        resp.json({"error-field":"password", "error": "Need to enter a password"});
+        resp.status(200).json({"error-field":"password", "error": "Need to enter a password"});
     }
     db = createdb();
     db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
-        console.log(row);
         if (row == undefined) {
             resp.json({"error-field":"uniemail", "error": "Uni Email not found"});
         }
@@ -288,7 +284,7 @@ app.post('/api/signin', function(req, resp) {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
                 if (result) {
                     req.session.userid = row.user_id;
-                    resp.status(200).json({"name": row.name, "id":row.user_id});
+                    resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
                 else {
                     resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
