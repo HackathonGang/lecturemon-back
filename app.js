@@ -11,6 +11,11 @@ const { json } = require('body-parser');
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+
+}))
+
 const Unis = ['durham', 'warwick'];
 
 app.post('/api/signup', function(req, resp) {
@@ -22,7 +27,7 @@ app.post('/api/signup', function(req, resp) {
     [0, 'uniemail', 'Email already in use'],
     [0, 'useremail', 'Need a contact Email'],];
     //Validating Name
-    if (!(req.body.name) || !(/^[a-zA-Z_]+$/.test(req.body.name))) {
+    if (!(req.body.name) || !(/^[a-zA-Z\s]+$/.test(req.body.name))) {
         errors[0][0] = 1;
     }
     //Validating Password
@@ -52,14 +57,14 @@ app.post('/api/signup', function(req, resp) {
 
     for (let error = 0; error < errors.length; error++) {
         if (errors[error][0] == 1) {
-            resp.status(400);
             errorlist.push({error:errors[error][2], errorField:errors[error][1]})
         }
     }
 
     if (errorlist.length > 0) {
-        resp.json(errorlist);
-    } 
+        resp.status(400).json(errorlist);
+        return;
+    }
     //Splitting Name
     const first_name = req.body.name.split(' ')[0];
     let last_name = '';
@@ -90,7 +95,7 @@ app.post('/api/signup', function(req, resp) {
             bcrypt.hash(req.body.password, 10, function(err, hash) {
                 bcrypt.compare(row.password, hash, function(err, result) {
                     if (result) {
-
+                        
                     }
                     else {
                         resp.json({"error-field":"password", "error": "Incorrect Password"});
