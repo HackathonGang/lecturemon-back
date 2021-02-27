@@ -28,8 +28,6 @@ app.post('/api/signup', function(req, resp) {
     //Validating Password
     if (!(req.body.name) || !(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/.test(req.body.password))) {
         errors[1][0] = True;
-        resp.status(400);
-        resp.json({"error-field":"password", "error": "Need a valid password (minimum length 8, must have at least one uppercase, lowercase, number and symbol)"});
     }
     //Validating Uni
     if (!Unis.includes((req.body.uni).toLowerCase())) {
