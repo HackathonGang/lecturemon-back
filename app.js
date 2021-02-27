@@ -287,7 +287,7 @@ app.post('/api/signin', function(req, resp) {
                     resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
                 else {
-                    resp.status(400).json({"error-field":"password", "error": "Incorrect Password"});
+                    resp.status(400).json([{"error-field":"password", "error": "Incorrect Password"}]);
                 }
             });
         }
