@@ -15,27 +15,27 @@ const Unis = ['durham', 'warwick'];
 
 app.post('/api/signup', function(req, resp) {
     errorlist = [];
-    errors = [[False, 'name', 'Need a valid name'],
-    [False, 'password', 'Need a valid password (minimum length 8, must have at least one uppercase, lowercase, number and symbol)'],
-    [False, 'uni', 'Need a valid Uni'],
-    [False, 'uniemail', 'Need a valid uni Email'],
-    [False, 'uniemail', 'Email already in use'],
-    [False, 'useremail', 'Need a contact Email'],];
+    errors = [[0, 'name', 'Need a valid name'],
+    [0, 'password', 'Need a valid password (minimum length 8, must have at least one uppercase, lowercase, number and symbol)'],
+    [0, 'uni', 'Need a valid Uni'],
+    [0, 'uniemail', 'Need a valid uni Email'],
+    [0, 'uniemail', 'Email already in use'],
+    [0, 'useremail', 'Need a contact Email'],];
     //Validating Name
     if (!(req.body.name) || !(/^[a-zA-Z_]+$/.test(req.body.name))) {
-        errors[0][0] = True;
+        errors[0][0] = 1;
     }
     //Validating Password
-    if (!(req.body.name) || !(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/.test(req.body.password))) {
-        errors[1][0] = True;
+    if (!(req.body.password) || !(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/.test(req.body.password))) {
+        errors[1][0] = 1;
     }
     //Validating Uni
     if (!Unis.includes((req.body.uni).toLowerCase())) {
-        errors[2][0] = True;
+        errors[2][0] = 1;
     }
     //Validating Uni Email
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.ac.uk$/.test(req.body.uniemail)) || !(req.body.uniemail.includes(req.body.uni))) { //Add check for uni email address to selected uni
-        errors[3][0] = True;
+        errors[3][0] = 1;
     }
     /*db.get(`SELECT uni_email FROM users WHERE uni_email = ${req.body.uniemail}`, function (row) {
         if (row != undefined) {
@@ -47,17 +47,19 @@ app.post('/api/signup', function(req, resp) {
         req.body.useremail = user.body.uniemail;
     }
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(req.body.useremail))) {
-        errors[5][0] = True;
+        errors[5][0] = 1;
     }
 
-    for (const error of errors) {
-        if (errors[error][0] == True) {
+    for (let error = 0; error < errors.length; error++) {
+        if (errors[error][0] == 1) {
             resp.status(400);
-            errorlist.push({"error":errors[error][2], "errorField":errors[error][1]})
+            errorlist.push({error:errors[error][2], errorField:errors[error][1]})
         }
     }
-    resp.json(json.stringify(errorlist));
 
+    if (errorlist.length > 0) {
+        resp.json(errorlist);
+    } 
     //Splitting Name
     const first_name = req.body.name.split(' ')[0];
     let last_name = '';
