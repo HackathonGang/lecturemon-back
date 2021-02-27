@@ -26,6 +26,12 @@ const dbPath = path.resolve(__dirname, 'data/data.db');
 const sqlite3 = require('sqlite3').verbose(); // verbose gives longer traces in case of error
 const extPath = path.resolve(__dirname, 'data/json1.so');
   
+let db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        return console.error(err.message);
+    }
+});
+
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         user_id INTEGER PRIMARY KEY,
@@ -54,10 +60,15 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS lectures ( 
         lecture_id INTEGER PRIMARY KEY,
         module_id INTEGER NOT NULL,
-        start_date_time TEXT NOT NULL,
-        end_date_time TEXT NOT NULL,
-        survey_sent INTEGER NOT NULL
-    )`); // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
+        start_date_time INTEGER NOT NULL,
+        end_date_time INTEGER NOT NULL
+    )`);
+    db.run(`CREATE TABLE IF NOT EXISTS survey_tracker ( 
+        survey_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        sent INTEGER NOT NULL
+    )`); 
+    // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
     // db.run(`CREATE TABLE IF NOT EXISTS courseworks ( 
     //     coursework_id INTEGER PRIMARY KEY,
     //     module_id INTEGER NOT NULL,
@@ -72,7 +83,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS surveys (
         survey_id INTEGER PRIMARY KEY,
         survey_template INTEGER NOT NULL,
-        date_time TEXT NOT NULL
+        date_time INTEGER NOT NULL
     )`);
     db.run(`CREATE TABLE IF NOT EXISTS lecture_responses (
         response_id INTEGER PRIMARY KEY,
@@ -98,6 +109,7 @@ db.serialize(() => {
         extension TEXT NOT NULL,
         name TEXT NOT NULL
     )`);
+});
   
 db.close((err) => {
     if (err) {
