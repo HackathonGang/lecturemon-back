@@ -689,7 +689,7 @@ app.get('/api/survey/:survey_id', function(req, resp) {
     db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.params.survey_id], (err, row) => {
         if (row != undefined) {
             let toR = JSON.parse(unescape(row['survey_formatted']));
-            toR['survey_id'] = re.params.survey_id;
+            toR['survey_id'] = req.params.survey_id;
             resp.status(200).json(toR);
         } else {
             resp.sendStatus(400);
