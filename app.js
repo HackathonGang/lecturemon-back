@@ -596,15 +596,13 @@ app.post('/api/createmodulesurvey', function(req, resp) {
                             resp.status(200).json(rendered);
                         }
                     });
-        
-                });
-            }
-        
-            db.close((err) => {
-                if (err) {
                 }
             });
+        });
 
+        db.close((err) => {
+            if (err) {
+            }
         });
     }
 
