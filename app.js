@@ -746,7 +746,7 @@ app.get('/api/lecturer/:lecturer_id', function(req, resp) {
         result['lecturer_name'] = row.name;
         next();
         function next() {
-            db.all(`SELECT module_responses.response, modules.module_id, modules.module_name, modules.module_code FROM module_responses INNER JOIN modules ON module_responses.module_id=modules.module_id WHERE module_responses.module_id = modules.module_id AND modules.lecturer_id = ?`, [req.params.lecturer_id], (err, rows) => {
+            db.all(`SELECT module_responses.response, modules.module_id, modules.module_name, modules.module_code FROM modules INNER JOIN module_responses ON module_responses.module_id=modules.module_id WHERE module_responses.module_id = modules.module_id AND modules.lecturer_id = ?`, [req.params.lecturer_id], (err, rows) => {
                 if (!rows) {
                     resp.sendStatus(404);
                     return;
