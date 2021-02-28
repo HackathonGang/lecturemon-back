@@ -477,6 +477,28 @@ app.post('/api/sendsurvey', function(req, resp) {
     });
 })
 
+app.post('/api/addlecturer', function(req, resp) {
+    if (!req.body.name) {
+        resp.sendStatus(400);
+    }
+    db = createdb();
+
+    db.run(`INSERT INTO lecturers (name) VALUES (?)`, [req.body.name], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+
 app.post('api/enroll', function(req, resp) {
     if (!req.body.module_id, !req.session.user_id) {
         resp.sendStatus(400);
