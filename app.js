@@ -560,6 +560,7 @@ function renderTemplate(template, module_code, module_name) {
             template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
         }
     }
+    console.log(template);
     return template;
 }
 
