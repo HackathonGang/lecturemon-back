@@ -44,7 +44,7 @@ db.serialize(() => {
         uni_email TEXT NOT NULL,
         contact_email TEXT NOT NULL,
         password TEXT NOT NULL,
-        year_group INTEGER
+        year_group INTEGER,
         xp INTEGER NOT NULL
     );`, err => {
         if (err) {
@@ -844,6 +844,26 @@ app.get('/api/lecturer/:lecturer_id', function(req, resp) {
     });
 });
 
+app.get('/api/leaderboard', function(req, resp) {
+    var users = [];
+    db = createdb();
+    db.all(`SELECT first_name, last_name, xp FROM users ORDER BY xp DESC`, (err, rows) => {
+        if (!rows) {
+            resp.sendStatus(400);
+            return;
+        }
+        for (let row = 0; row < rows.length; row++) {
+            users.push({'name': rows[row].first_name + rows[row].last_name, 'xp': rows[row].xp});
+        }
+        resp.status(200).json(users);
+    });
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
 
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
@@ -893,7 +913,7 @@ app.get('/api/ping', function(req, resp) {
 app.get('/api/logout', function(req, resp) {
     req.session.destroy();
     resp.sendStatus(200);
- });
+});
 
 // addTemplate("Regular survey for [module code]", "", "[module_id]", "lecture", ["How much did you enjoy this lecture?", "slider", [1,5,1,"Not at all", "It was amazing!"]]);
 
