@@ -462,12 +462,13 @@ app.post('/api/sendsurvey', function(req, resp) {
     db = createdb();
 
     let arr = []
+    let args = []
     db.serialize(() => {
         db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
             // console.log(row);
             arr.push(row['user_id']);
         }, (err, rows) => {
-            let args = []
+
             arr.forEach(user_id => {
                 args.push(req.body.survey_id);
                 args.push(user_id);
