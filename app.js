@@ -467,6 +467,7 @@ app.post('/api/sendsurvey', function(req, resp) {
             arr.push(row['user_id']);
         }, (err, rows) => {
             console.log(arr);
+            console.log(rows);
             arr.forEach(user_id => {
                 db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, [req.body.survey_id, user_id], (err) => {
                     if (err) {
