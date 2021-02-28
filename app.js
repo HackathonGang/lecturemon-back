@@ -440,7 +440,7 @@ app.post('/api/surveyresponse', function(req, resp) {
 app.post('/api/createsurveytemplate', function(req, resp) {
     db = createdb();
 
-    db.run(`INSERT INTO survey_templates (format), VALUES (?)`, [escape(req.body)], (err) => {
+    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(req.body)], (err) => {
         if (err) {
             console.error(err);
         } else {
@@ -478,7 +478,29 @@ app.post('/api/sendsurvey', function(req, resp) {
     });
 })
 
-app.post('api/enroll', function(req, resp) {
+app.post('/api/addlecturer', function(req, resp) {
+    if (!req.body.name) {
+        resp.sendStatus(400);
+    }
+    db = createdb();
+
+    db.run(`INSERT INTO lecturers (name) VALUES (?)`, [req.body.name], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+
+app.post('/api/enroll', function(req, resp) {
     if (!req.body.module_id, !req.session.user_id) {
         resp.sendStatus(400);
     }
@@ -531,15 +553,18 @@ app.get('/api/surveys', function(req, resp) {
 
 app.post('/api/createmodulesurvey', function(req, resp) {
     db = createdb();
-    if (!req.body.template_id, !req.body.module_id) {
+    if (req.body.template_id && req.body.module_id) {
         db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
             let rendered=renderTemplate(unescape(row[0]), row[1], row[2]);
-            db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
+            db.run(`INSERT INTO surveys (survey_template, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
                     console.error(err);
+                    resp.sendStatus(400);
+                } else {
+                    resp.status(200).json(rendered);
                 }
             });
-            resp.status(200).json(rendered);
+
         });
     }
 
@@ -579,15 +604,17 @@ app.post('/api/addmodule', function(req, resp) {
 //     module_code TEXT NOT NULL,
 //     lecturer_id INTEGER NOT NULL
 
-app.get('/api/survey', function(req, resp) {
-    if (!req.session.survey_id) {
-        resp.sendStatus(400);
-    }
+app.get('/api/survey/:survey_id', function(req, resp) {
 
     db = createdb();
 
-    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.session.survey_id], (err, row) => {
-        resp.status(200).json(unescape(row[0]));
+    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.params.survey_id], (err, row) => {
+        if (row != undefined) {
+            resp.status(200).json(unescape(row[0]));
+        } else {
+            resp.sendStatus(400);
+        }
+
     });
 
     db.close((err) => {
