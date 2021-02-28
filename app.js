@@ -552,15 +552,15 @@ app.get('/api/surveys', function(req, resp) {
 });
 
 function renderTemplate(template, module_code, module_name) {
-    console.log(template);
-    console.log(module_code);
-    console.log(module_name);
+    // console.log(template);
+    // console.log(module_code);
+    // console.log(module_name);
     for (let [key, value] of Object.entries(template)) {
         if (key != "questions") {
             template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
         }
     }
-    console.log(template);
+    // console.log(template);
     return template;
 }
 
@@ -568,8 +568,8 @@ app.post('/api/createmodulesurvey', function(req, resp) {
     db = createdb();
     if (req.body.template_id && req.body.module_id) {
         db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
-            console.log(row);
-            let rendered=renderTemplate(unescape(row[0]), row[1], row[2]);
+            // console.log(row);
+            let rendered=renderTemplate(unescape(row['format']), row['module_code'], row['module_name']);
             db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
                     console.error(err);
