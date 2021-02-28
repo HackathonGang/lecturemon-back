@@ -582,7 +582,7 @@ app.get('/api/survey/:survey_id', function(req, resp) {
 
     db = createdb();
 
-    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [survey_id], (err, row) => {
+    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.params.survey_id], (err, row) => {
         if (row != undefined) {
             resp.status(200).json(unescape(row[0]));
         } else {
