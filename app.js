@@ -119,8 +119,9 @@ db.serialize(() => {
     }) // use a standard format described here: [] to format the strings?
     .run(`CREATE TABLE IF NOT EXISTS surveys (
         survey_id INTEGER PRIMARY KEY,
-        survey_template INTEGER NOT NULL,
-        date_time INTEGER NOT NULL
+        survey_formatted TEXT NOT NULL,
+        module_id INTEGER NOT NULL,
+        template_id INTEGEr NOT NULL
     );`, err => {
         if (err) {
           return console.error(err.message);
@@ -462,6 +463,14 @@ app.get('/api/surveys', function(req, resp) {
     });
     // console.log(newJson);
 
+});
+
+app.get('/api/survey', function(req, resp) {
+    if (!req.session.survey_id || !req.session.survey_id) {
+        resp.sendStatus(400);
+    }
+
+    db.get(`SELECT module_name, module_code FROM modules INNER JOIN ON `)
 });
 
 //List of Modules
