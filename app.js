@@ -626,7 +626,7 @@ app.get('/api/module/:module_id', function(req, resp) {
     db = createdb();
     db.serialize(() => {
         db.get(`SELECT modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM modules INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE modules.module_id = ?`, [req.params.module_id], (err, row) => {
-            if (!rows) {
+            if (!row) {
                 resp.sendStatus(404);
             }
             result['module_name'] = row.module_name;
