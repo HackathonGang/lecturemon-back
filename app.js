@@ -552,7 +552,7 @@ app.get('/api/surveys', function(req, resp) {
 });
 
 function renderTemplate(template, module_code, module_name) {
-    // console.log(template);
+    console.log(template);
     // console.log(module_code);
     // console.log(module_name);
     for (let [key, value] of Object.entries(template)) {
