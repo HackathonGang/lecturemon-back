@@ -658,10 +658,10 @@ app.get('/api/modules', function(req, resp) {
         return;
     }
     db = createdb();
-    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
+    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code, lecturers.lecturer_id FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
         modules = [];
         for (let row = 0; row < rows.length; row++) {
-            modules.push({'module_id':rows[row].module_id, 'module_name':rows[row].module_name, 'module_lecturer':rows[row].module_lecturer, 'module_code':rows[row].module_code});
+            modules.push({'module_id':rows[row].module_id, 'module_name':rows[row].module_name, 'module_lecturer':rows[row].module_lecturer, 'module_code':rows[row].module_code, 'lecturer_id':rows[row].lecturer_id});
         };
         console.log(modules);
         resp.status(200).json(modules);
@@ -779,8 +779,6 @@ app.get('/api/lecturer/:lecturer_id', function(req, resp) {
         }
     });
 });
-
-
 
 
 function addTemplate(title, description, target, target_type, questions) {
