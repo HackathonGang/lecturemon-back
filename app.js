@@ -408,11 +408,7 @@ app.post('/api/surveyresponse', function(req, resp) {
         let target      = req.body.target;
         let target_type = req.body.target_type;
         if (target_type == "lecture") {
-            let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
-                if (err) {
-                    return console.error(err.message);
-                }
-            });
+            db = createdb();
 
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
@@ -452,7 +448,7 @@ app.post('/api/surveyresponse', function(req, resp) {
                     }
                 })
                 req.session.xp += 25;
-                db.get(`SELECT card_id FROM cards WHERE module_id = ?`, [req.body.module_id], (err, row) => {
+                db.get(`SELECT card_id FROM cards WHERE module_id = ?`, [target], (err, row) => {
                     if (err) {
                         console.error(err);
                     }
