@@ -453,10 +453,10 @@ app.post('/api/surveyresponse', function(req, resp) {
                     }
                 })
                 req.session.xp += 25;
-                db.get(`SELECT card_id FROM cards WHERE modules_id = ?`, [req.body.module_id], (err, row) => {
+                db.get(`SELECT card_id FROM cards WHERE module_id = ?`, [req.body.module_id], (err, row) => {
                     if (!row) {
                         resp.sendStatus(400);
-                        break;
+                        return;
                     }
                     db.run(`INSERT INTO card_users (user_id, card_id) VALUES (?, ?)`, [req.session.user_id, row.card_id], err => {
                         if (err) {
