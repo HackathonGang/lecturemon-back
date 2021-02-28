@@ -97,7 +97,7 @@ db.serialize(() => {
           return console.error(err.message);
         }
     })
-    // maybe, instead we have a table that has un-sent lectures - delete rows after email sent? - check when db updated
+    // maybe, instead we have a table that has un-1 lectures - delete rows after email sent? - check when db updated
     // .run(`CREATE TABLE IF NOT EXISTS courseworks ( 
     //      coursework_id INTEGER PRIMARY KEY,
     //      module_id INTEGER NOT NULL,
@@ -379,10 +379,11 @@ app.get('/api/timetable', function(req, resp) {
 
 //POST Survey Response
 app.post('/api/surveyresponse', function(req, resp) {
-    if (v.validate(req, responseSchema)) {
-        let survey_id   = req.survey_id;
-        let target      = req.target;
-        let target_type = req.target_type;
+    // if (v.validate(req, responseSchema)) {
+    if (1==1) {
+        let survey_id   = req.body.survey_id;
+        let target      = req.body.target;
+        let target_type = req.body.target_type;
         if (target_type == "lecture") {
             let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
                 if (err) {
@@ -392,8 +393,8 @@ app.post('/api/surveyresponse', function(req, resp) {
 
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
-                (lecture_id, survey_id, response) VALUES 
-                (?, ?, ?);`, [target, survey_id, req.answers] ,err => {
+                (lecture_id, module_id, survey_id, response) VALUES 
+                (?, ?, ?, ?);`, [target, req.body.module_id, survey_id, req.answers] ,err => {
                     if (err) {
                         console.error(err);
                     }
@@ -435,6 +436,68 @@ app.post('/api/surveyresponse', function(req, resp) {
 
 });
 
+app.post('/api/createsurveytemplate', function(req, resp) {
+    db = createdb();
+
+    db.run(`INSERT INTO survey_templates (format), VALUES (?)`, [escape(req.body)], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+app.post('/api/sendsurvey', function(req, resp) {
+    if (!req.body.survey_id, !req.body.module_id) {
+        resp.sendStatus(400);
+    }
+    db = createdb();
+
+    db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
+        db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, [req.body.survey_id, row[0]], (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                resp.sendStatus(200);
+            }
+        });
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+})
+
+app.post('api/enroll', function(req, resp) {
+    if (!req.body.module_id, !req.session.user_id) {
+        resp.sendStatus(400);
+    }
+    db = createdb();
+
+    db.run(`INSERT INTO module_lookup (user_id, module_id, status) VALUES (?,?,0)`, [req.session.user_id, req.body.module_id], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
 //List of Surveys
 app.get('/api/surveys', function(req, resp) {
     if (!req.session.user_id) {
@@ -465,12 +528,73 @@ app.get('/api/surveys', function(req, resp) {
 
 });
 
+app.post('/api/createmodulesurvey', function(req, resp) {
+    db = createdb();
+    if (!req.body.template_id, !req.body.module_id) {
+        db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
+            let rendered=renderTemplate(unescape(row[0]), row[1], row[2]);
+            db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+            resp.status(200).json(rendered);
+        });
+    }
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+app.post('/api/addmodule', function(req, resp) {
+    if (!req.body.uni_id || !req.body.module_name || !req.body.module_code || !req.body.lecturer_id) {
+        resp.sendStatus(400);
+    }
+    let b = req.body;
+    db = createdb();
+
+    db.run(`INSERT INTO modules (uni_id, module_name, module_code, lecturer_id) VALUES (?,?,?,?)`, [b.uni_id, b.module_name, b.module_code, b.lecturer_id], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+// .run(`CREATE TABLE IF NOT EXISTS modules (
+//     module_id INTEGER PRIMARY KEY,
+//     uni_id INTEGER NOT NULL,
+//     module_name TEXT NOT NULL,
+//     module_code TEXT NOT NULL,
+//     lecturer_id INTEGER NOT NULL
+
 app.get('/api/survey', function(req, resp) {
-    if (!req.session.survey_id || !req.session.survey_id) {
+    if (!req.session.survey_id) {
         resp.sendStatus(400);
     }
 
-    db.get(`SELECT module_name, module_code FROM modules INNER JOIN ON `)
+    db = createdb();
+
+    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.session.survey_id], (err, row) => {
+        resp.status(200).json(unescape(row[0]));
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+    // render_template()
 });
 
 //List of Modules
@@ -548,6 +672,16 @@ app.get('/api/module/:module_id', function(req, resp) {
         });
     });
 });
+
+
+function renderTemplate(template, module_code, module_name) {
+    for (let [key, value] of Object.entries(template)) {
+        if (key != "questions") {
+            template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
+        }
+    }
+    return template;
+}
 
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
