@@ -460,7 +460,11 @@ app.post('/api/surveyresponse', function(req, resp) {
                             }
                         })
                     }
-
+                })
+                db.get('UPDATE surveys_sent SET sent = 1 WHERE user_id = ? and survey_id = ?', [req.session.user_id, survey_id], err => {
+                    if (err) {
+                        console.error(err);
+                    }
                 })
             });
 
