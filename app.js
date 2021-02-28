@@ -468,13 +468,13 @@ app.post('/api/sendsurvey', function(req, resp) {
             // console.log(row);
             arr.push(row['user_id']);
         }, (err, rows) => {
-
+            console.log(arr);
             arr.forEach(user_id => {
                 args.push(req.body.survey_id);
                 args.push(user_id);
             });
         });
-
+        console.log(args);
         db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, args, (err) => {
             if (err) {
                 console.error(err);
