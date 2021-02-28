@@ -536,6 +536,7 @@ app.post('/api/createmodulesurvey', function(req, resp) {
             db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
                     console.error(err);
+                    resp.sendStatus(400);
                 } else {
                     resp.status(200).json(rendered);
                 }
