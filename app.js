@@ -883,7 +883,7 @@ function addTemplate(title, description, target, target_type, questions) {
 
 app.get('/api/ping', function(req, resp) {
    if (req.session.user_id) {
-       resp.json({"id": req.session.user_id, "name": req.session.name});
+       resp.json({"id": req.session.user_id, "name": req.session.name, "xp": req.session.xp});
    }
    else {
        resp.sendStatus('440');
