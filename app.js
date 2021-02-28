@@ -709,6 +709,51 @@ app.get('/api/module/:module_id', function(req, resp) {
     });
 });
 
+app.get('/api/lecturer/:lecturer_id', function(req, resp) {
+    var result = {};
+    db = createdb();
+    db.get(`SELECT name FROM lecturers WHERE lecturer_id = ?`, [req.params.lecturer_id], (err, row) => {
+        if (!row) {
+            resp.sendStatus(404);
+            return;
+        };
+        result['lecturer_name'] = row.name;
+        next();
+        function next() {
+            db.all(`SELECT module_responses.response, modules.module_id, modules.module_name, modules.module_code FROM module_responses INNER JOIN modules ON module_responses.module_id=modules.module_id WHERE module_responses.module_id = modules.module_id AND modules.lecturer_id = ?`, [req.params.lecturer_id], (err, rows) => {
+                if (!rows) {
+                    resp.sendStatus(404);
+                    return;
+                };
+                var friendliness_score = 0;
+                var speed_of_response = 0;
+                var module_list = [];
+                var alreadyadded = [];
+                for (let row = 0; row < rows.length; row++) {
+                    let values = rows[row]['response'];
+                    friendliness_score += parseInt(values[7]);
+                    speed_of_response += parseInt(values[9]);
+                    if (!alreadyadded.includes(rows[row]['module_id'])) {
+                        module_list.push({'module_id':rows[row]['module_id'], 'module_name':rows[row]['module_name'], 'module_code':rows[row]['module_code']});
+                        alreadyadded.push(rows[row]['module_id']);
+                    } 
+                };
+                friendliness_score = parseFloat((friendliness_score / rows.length).toFixed(1));
+                speed_of_response = parseFloat((speed_of_response / rows.length).toFixed(1));
+                result['friendliness_score'] = friendliness_score;
+                result['speed_of_response'] = speed_of_response;
+                result['module_list'] = module_list;
+                resp.status(200).json(result);
+                return;
+        })}
+    })
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
 
 function renderTemplate(template, module_code, module_name) {
     for (let [key, value] of Object.entries(template)) {
