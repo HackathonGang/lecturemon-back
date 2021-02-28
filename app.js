@@ -892,6 +892,7 @@ app.get('/api/ping', function(req, resp) {
 
 app.get('/api/logout', function(req, resp) {
     req.session.destroy();
+    resp.sendStatus(200);
  });
 
 // addTemplate("Regular survey for [module code]", "", "[module_id]", "lecture", ["How much did you enjoy this lecture?", "slider", [1,5,1,"Not at all", "It was amazing!"]]);
