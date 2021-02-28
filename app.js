@@ -284,6 +284,7 @@ app.post('/api/signin', function(req, resp) {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
                 if (result) {
                     req.session.userid = row.user_id;
+                    req.session.name = row.first_name + row.last_name;
                     resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
                 else {
@@ -431,6 +432,7 @@ app.post('/api/surveyresponse', function(req, resp) {
 });
 
 app.get('/api/surveys', function(req, resp) {
+<<<<<<< HEAD
     // if (!req.session.user_id) {
     //     resp.status("440").send("Session expired");
     // }
@@ -440,6 +442,24 @@ app.get('/api/surveys', function(req, resp) {
 
     db.all(`SELECT surveys.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, rows) => {
         let json = JSON.parse(unescape(rows[0]));
+=======
+    if (!req.session.id) {
+        resp.sendStatus("440");
+    }
+
+    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
+        console.log(rows);
+    });
+});
+
+app.get('/api/modules', function(req, resp) {
+    if (!req.session.id) {
+        resp.sendStatus("440");
+    }
+
+    db.all(sele)(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
+        console.log(rows);
+>>>>>>> 4452741cb45015b4221d1f4eec3ac3bc0800c87d
     });
 
     db.close((err) => {
@@ -485,6 +505,14 @@ function addTemplate(title, description, target, target_type, questions) {
     });
 };
 
+app.get('/api/ping', function(req, resp) {
+   if (req.session.userid) {
+       resp.json({"id": req.session.userid, "name": req.session.name});
+   }
+   else {
+       resp.sendStatus('440');
+   }
+});
 
 // addTemplate("Regular survey for [module code]", "", "[module_id]", "lecture", ["How much did you enjoy this lecture?", "slider", [1,5,1,"Not at all", "It was amazing!"]]);
 
