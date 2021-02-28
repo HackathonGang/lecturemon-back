@@ -626,7 +626,7 @@ app.get('/api/module/:module_id', function(req, resp) {
     db = createdb();
     db.serialize(() => {
         db.get(`SELECT modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM modules INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE modules.module_id = ?`, [req.params.module_id], (err, row) => {
-            if (err) {
+            if (!rows) {
                 resp.sendStatus(404);
             }
             result['module_name'] = row.module_name;
@@ -634,7 +634,7 @@ app.get('/api/module/:module_id', function(req, resp) {
             result['module_code'] = row.module_code;
         });
         db.all(`SELECT module_responses.response FROM module_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
-            if (err) {
+            if (!rows) {
                 resp.sendStatus(404);
             }
             var coursework_score = 0;
@@ -654,7 +654,7 @@ app.get('/api/module/:module_id', function(req, resp) {
             result['difficulty_score'] = difficulty_score;
         });
         db.all(`SELECT lecture_responses.response FROM lecture_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
-            if (err) {
+            if (!rows) {
                 resp.sendStatus(404);
             }
             var lecture_satisfaction = 0;
