@@ -440,7 +440,7 @@ app.post('/api/surveyresponse', function(req, resp) {
 app.post('/api/createsurveytemplate', function(req, resp) {
     db = createdb();
 
-    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(req.body)], (err) => {
+    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(JSON.stringify(req.body))], (err) => {
         if (err) {
             console.error(err);
         } else {
@@ -461,21 +461,33 @@ app.post('/api/sendsurvey', function(req, resp) {
     }
     db = createdb();
 
-    db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
-        db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, [req.body.survey_id, row[0]], (err) => {
+    let arr = []
+    db.serialize(() => {
+        db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
+            console.log(row);
+            arr.push(row['user_id']);
+        }, (err, rows) => {
+            console.log(arr);
+            console.log(rows);
+            arr.forEach(user_id => {
+                db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, [req.body.survey_id, user_id], (err) => {
+                    if (err) {
+                        console.error(err);
+                    }
+                });
+            });
+        });
+
+        db.close((err) => {
             if (err) {
-                console.error(err);
-            } else {
-                resp.sendStatus(200);
+                return console.error(err.message);
             }
         });
+
+        resp.sendStatus(200);
     });
 
-    db.close((err) => {
-        if (err) {
-            return console.error(err.message);
-        }
-    });
+
 })
 
 app.post('/api/addlecturer', function(req, resp) {
@@ -551,12 +563,26 @@ app.get('/api/surveys', function(req, resp) {
 
 });
 
+function renderTemplate(template, module_code, module_name) {
+    // console.log(template);
+    // console.log(module_code);
+    // console.log(module_name);
+    for (let [key, value] of Object.entries(template)) {
+        if (key != "questions" && key != "target") {
+            template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
+        }
+    }
+    // console.log(template);
+    return template;
+}
+
 app.post('/api/createmodulesurvey', function(req, resp) {
     db = createdb();
     if (req.body.template_id && req.body.module_id) {
         db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
-            let rendered=renderTemplate(unescape(row[0]), row[1], row[2]);
-            db.run(`INSERT INTO surveys (survey_template, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
+            // console.log(row);
+            let rendered=renderTemplate(JSON.parse(unescape(row['format'])), row['module_code'], row['module_name']);
+            db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(JSON.stringify(rendered)), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
                     console.error(err);
                     resp.sendStatus(400);
@@ -755,14 +781,7 @@ app.get('/api/lecturer/:lecturer_id', function(req, resp) {
 });
 
 
-function renderTemplate(template, module_code, module_name) {
-    for (let [key, value] of Object.entries(template)) {
-        if (key != "questions") {
-            template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
-        }
-    }
-    return template;
-}
+
 
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
