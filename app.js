@@ -464,6 +464,7 @@ app.post('/api/sendsurvey', function(req, resp) {
     let arr = []
     db.serialize(() => {
         db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
+            console.log(row);
             arr.push(row['user_id']);
         }, (err, rows) => {
             console.log(arr);
@@ -477,16 +478,16 @@ app.post('/api/sendsurvey', function(req, resp) {
             });
         });
 
-
+        db.close((err) => {
+            if (err) {
+                return console.error(err.message);
+            }
+        });
 
         resp.sendStatus(200);
     });
 
-    db.close((err) => {
-        if (err) {
-            return console.error(err.message);
-        }
-    });
+
 })
 
 app.post('/api/addlecturer', function(req, resp) {
