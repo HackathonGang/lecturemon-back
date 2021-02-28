@@ -440,7 +440,7 @@ app.post('/api/surveyresponse', function(req, resp) {
 app.post('/api/createsurveytemplate', function(req, resp) {
     db = createdb();
 
-    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(req.body)], (err) => {
+    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(JSON.stringify(req.body))], (err) => {
         if (err) {
             console.error(err);
         } else {
@@ -569,8 +569,8 @@ app.post('/api/createmodulesurvey', function(req, resp) {
     if (req.body.template_id && req.body.module_id) {
         db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
             // console.log(row);
-            let rendered=renderTemplate(unescape(row['format']), row['module_code'], row['module_name']);
-            db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
+            let rendered=renderTemplate(JSON.parse(unescape(row['format'])), row['module_code'], row['module_name']);
+            db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(JSON.stringify(rendered)), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
                     console.error(err);
                     resp.sendStatus(400);
