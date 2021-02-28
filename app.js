@@ -457,7 +457,7 @@ app.post('/api/surveyresponse', function(req, resp) {
                         console.error(err);
                     }
                     next(row);
-                    function next() {
+                    function next(row) {
                         db.run(`INSERT INTO card_users (user_id, card_id) VALUES (?, ?)`, [req.session.user_id, row.card_id], err => {
                             if (err) {
                                 console.error(err);
