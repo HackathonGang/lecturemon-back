@@ -284,7 +284,7 @@ app.post('/api/signin', function(req, resp) {
         else {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
                 if (result) {
-                    req.session.userid = row.user_id;
+                    req.session.user_id = row.user_id;
                     req.session.name = row.first_name + row.last_name;
                     resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
@@ -390,7 +390,7 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
                 (lecture_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`, err => {
+                (?, ?, ?);`, [target, survey_id, req.answers] ,err => {
                     if (err) {
                         console.error(err);
                     }
@@ -407,7 +407,7 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO module_responses 
                 (module_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`, err => {
+                (?, ?, ?);`, [target, survey_id, req.answers], err => {
                     if (err) {
                         console.error(err);
                     }
@@ -466,13 +466,15 @@ app.get('/api/surveys', function(req, resp) {
 app.get('/api/modules', function(req, resp) {
     if (!req.session.user_id) {
         resp.sendStatus(400);
+        return;
     }
     db = createdb();
-    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
+    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [1], (err, rows) => {
         modules = [];
-        rows.forEach((row) => {
-            modules.push({'module_id':row.module_id, 'module_name':row.module_name, 'module_lecturer':row.module_lecturer, 'module_code':row.module_code});
-        });
+        for (let row = 0; row < rows.length; row++) {
+            modules.push({'module_id':rows[row].module_id, 'module_name':rows[row].module_name, 'module_lecturer':rows[row].module_lecturer, 'module_code':rows[row].module_code});
+        };
+        console.log(modules);
         resp.status(200).json(modules);
     });
 
@@ -481,6 +483,12 @@ app.get('/api/modules', function(req, resp) {
             return console.error(err.message);
         }
     });
+});
+
+//Individual Module
+app.get('/api/module', function(req, resp) {
+    db = createdb();
+    db.add(`SELECT`)
 });
 
 function addTemplate(title, description, target, target_type, questions) {
@@ -520,8 +528,8 @@ function addTemplate(title, description, target, target_type, questions) {
 };
 
 app.get('/api/ping', function(req, resp) {
-   if (req.session.userid) {
-       resp.json({"id": req.session.userid, "name": req.session.name});
+   if (req.session.user_id) {
+       resp.json({"id": req.session.user_id, "name": req.session.name});
    }
    else {
        resp.sendStatus('440');
