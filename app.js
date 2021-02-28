@@ -586,7 +586,7 @@ app.get('/api/survey/:survey_id', function(req, resp) {
         if (row != undefined) {
             resp.status(200).json(unescape(row[0]));
         } else {
-            resp.setHeaders(400);
+            resp.sendStatus(400);
         }
 
     });
