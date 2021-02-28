@@ -623,11 +623,19 @@ app.get('/api/module/:module_id', function(req, resp) {
     db = createdb();
     db.serialize(() => {
         db.get(`SELECT modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM modules INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE modules.module_id = ?`, [req.params.module_id], (err, row) => {
+            if (!row) {
+                resp.sendStatus(404);
+                return;
+            }
             result['module_name'] = row.module_name;
             result['module_lecturer'] = row.module_lecturer;
             result['module_code'] = row.module_code;
         });
         db.all(`SELECT module_responses.response FROM module_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
+            if (!rows) {
+                resp.sendStatus(404);
+                return;
+            }
             var coursework_score = 0;
             var enjoyability_score = 0;
             var difficulty_score = 0;
@@ -645,6 +653,10 @@ app.get('/api/module/:module_id', function(req, resp) {
             result['difficulty_score'] = difficulty_score;
         });
         db.all(`SELECT lecture_responses.response FROM lecture_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
+            if (!rows) {
+                resp.sendStatus(404);
+                return;
+            }
             var lecture_satisfaction = 0;
             for (let row = 0; row < rows.length; row++) {
                 lecture_satisfaction += parseInt(rows[row]['response']);
