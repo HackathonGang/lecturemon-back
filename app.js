@@ -542,9 +542,9 @@ app.get('/api/surveys', function(req, resp) {
     let user_id = req.session.user_id;
     db = createdb();
     let newJson = []
+    console.log(user_id);
 
-
-    db.each(`SELECT surveys_sent.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template  WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, row) => {
+    db.each(`SELECT surveys_sent.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.template_id  WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, row) => {
         // console.log(row);
         // console.log(unescape(row['format']));
         let oldJson = JSON.parse(unescape(row["format"]));
@@ -587,8 +587,21 @@ app.post('/api/createmodulesurvey', function(req, resp) {
                 if (err) {
                     console.error(err);
                     resp.sendStatus(400);
-                } else {
-                    resp.status(200).json(rendered);
+                    let rendered=renderTemplate(JSON.parse(unescape(row['format'])), row['module_code'], row['module_name']);
+                    db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(JSON.stringify(rendered)), req.body.module_id, req.body.template_id], (err) => {
+                        if (err) {
+                            console.error(err);
+                            resp.sendStatus(400);
+                        } else {
+                            resp.status(200).json(rendered);
+                        }
+                    });
+        
+                });
+            }
+        
+            db.close((err) => {
+                if (err) {
                 }
             });
 
