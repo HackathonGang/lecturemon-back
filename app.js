@@ -10,8 +10,10 @@ const json = require('body-parser');
 const FileStore = require('session-file-store')(session);
 
 app.use(cors());
+app.use(express.static('static'));
 app.use(express.json());
 app.use(cookieParser());
+// Uses sessions
 app.use(session({
     secret: '4dcb417e-381e-42cf-8f6a-5f0244bddb3c',
     resave: false,
@@ -26,6 +28,7 @@ const dbPath = path.resolve(__dirname, 'data/data.db');
 const sqlite3 = require('sqlite3').verbose(); // verbose gives longer traces in case of error
 const extPath = path.resolve(__dirname, 'data/json1.so');
 
+//Creates connection the db
 function createdb () {
     let db = new sqlite3.Database(dbPath, (err) => {
         if (err) {
@@ -34,6 +37,10 @@ function createdb () {
     });
     return db;
 }
+
+app.get('/', function(req, resp) {
+    
+})
 
 db = createdb();
 db.serialize(() => {
