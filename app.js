@@ -437,15 +437,29 @@ app.get('/api/surveys', function(req, resp) {
     if (!req.session.user_id) {
         resp.sendStatus(400);
     }
+    let user_id = req.session.user_id;
     db = createdb();
-    db.all(`SELECT surveys.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, rows) => {
-        let json = JSON.parse(unescape(rows[0]));
+    let newJson = []
+
+
+    db.each(`SELECT surveys_sent.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template  WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, row) => {
+        // console.log(row);
+        // console.log(unescape(row['format']));
+        let oldJson = JSON.parse(unescape(row["format"]));
+        // console.log(oldJson);
+        newJson.push({"survey_id": row["survey_id"], "survey_type": oldJson["target_type"], "survey_name": oldJson["survey_title"]});
+    }, (err, rows) => {
+        // console.log(newJson);
+        resp.status("200").json(newJson);
     });
+
     db.close((err) => {
         if (err) {
             return console.error(err.message);
         }
     });
+    // console.log(newJson);
+
 });
 
 //List of Modules
@@ -459,7 +473,7 @@ app.get('/api/modules', function(req, resp) {
         rows.forEach((row) => {
             modules.push({'module_id':row.module_id, 'module_name':row.module_name, 'module_lecturer':row.module_lecturer, 'module_code':row.module_code});
         });
-        json.status(200).json(modules);
+        resp.status(200).json(modules);
     });
 
     db.close((err) => {

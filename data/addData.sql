@@ -4,8 +4,8 @@ INSERT INTO unis (extension, name) VALUES ("durham.ac.uk", "Durham University");
 INSERT INTO lecturers (name) VALUES ("Matthew Leeke");
 INSERT INTO lecturers (name) VALUES ("Michael Gale");
 
-INSERT INTO modules (uni_id, module_code, lecturer_id) VALUES (1, "CS132", 1);
-INSERT INTO modules (uni_id, module_code, lecturer_id) VALUES (1, "CS141", 2);
+INSERT INTO modules (uni_id, module_code, lecturer_id, module_name) VALUES (1, "CS132", 1, "Computer Organisation & Architecture");
+INSERT INTO modules (uni_id, module_code, lecturer_id, module_name) VALUES (1, "CS141", 2, "Functional Programming");
 
 INSERT INTO lectures (module_id, start_date_time, end_date_time) VALUES (1, 1614686400, 1614690000);
 
