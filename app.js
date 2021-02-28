@@ -568,6 +568,7 @@ app.post('/api/createmodulesurvey', function(req, resp) {
     db = createdb();
     if (req.body.template_id && req.body.module_id) {
         db.get(`SELECT format, module_code, module_name FROM survey_templates INNER JOIN modules ON module_id = ? WHERE template_id = ?`, [req.body.module_id, req.body.template_id], (err, row) => {
+            console.log(row);
             let rendered=renderTemplate(unescape(row[0]), row[1], row[2]);
             db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(rendered), req.body.module_id, req.body.template_id], (err) => {
                 if (err) {
