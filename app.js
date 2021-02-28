@@ -301,7 +301,7 @@ app.post('/api/signin', function(req, resp) {
 const Users = [];
 
 var Validator = require('jsonschema').Validator;
-const { EDESTADDRREQ } = require('constants');
+const { SSL_OP_NO_QUERY_MTU } = require('constants');
 var v = new Validator();
 
 var responseSchema = {
@@ -604,7 +604,7 @@ app.get('/api/modules', function(req, resp) {
         return;
     }
     db = createdb();
-    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [1], (err, rows) => {
+    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
         modules = [];
         for (let row = 0; row < rows.length; row++) {
             modules.push({'module_id':rows[row].module_id, 'module_name':rows[row].module_name, 'module_lecturer':rows[row].module_lecturer, 'module_code':rows[row].module_code});
@@ -621,9 +621,47 @@ app.get('/api/modules', function(req, resp) {
 });
 
 //Individual Module
-app.get('/api/module', function(req, resp) {
+app.get('/api/module/:module_id', function(req, resp) {
+    var result = {}
     db = createdb();
-    db.add(`SELECT`)
+    db.serialize(() => {
+        db.get(`SELECT modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM modules INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE modules.module_id = ?`, [req.params.module_id], (err, row) => {
+            result['module_name'] = row.module_name;
+            result['module_lecturer'] = row.module_lecturer;
+            result['module_code'] = row.module_code;
+        });
+        db.all(`SELECT module_responses.response FROM module_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
+            var coursework_score = 0;
+            var enjoyability_score = 0;
+            var difficulty_score = 0;
+            for (let row = 0; row < rows.length; row++) {
+                let values = rows[row]['response'];
+                coursework_score += parseInt(values[1]);
+                enjoyability_score += parseInt(values[3]);
+                difficulty_score += parseInt(values[5]);
+            };
+            coursework_score = parseFloat((coursework_score / rows.length).toFixed(1));
+            enjoyability_score = parseFloat((enjoyability_score / rows.length).toFixed(1));
+            difficulty_score = parseFloat((difficulty_score / rows.length).toFixed(1));
+            result['coursework_score'] = coursework_score;
+            result['enjoyability_score'] = enjoyability_score;
+            result['difficulty_score'] = difficulty_score;
+        });
+        db.all(`SELECT lecture_responses.response FROM lecture_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
+            var lecture_satisfaction = 0;
+            for (let row = 0; row < rows.length; row++) {
+                lecture_satisfaction += parseInt(rows[row]['response']);
+            }
+            lecture_satisfaction = parseFloat((lecture_satisfaction / rows.length).toFixed(1));
+            result['lecture_satisfaction'] = lecture_satisfaction;
+            resp.status(200).json(result);
+        });
+        db.close((err) => {
+            if (err) {
+                return console.error(err.message);
+            }
+        });
+    });
 });
 
 
