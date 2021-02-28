@@ -491,6 +491,28 @@ app.post('/api/sendsurvey', function(req, resp) {
 
 })
 
+app.post('/api/adduni', function(req, resp) {
+    if (!req.body.name || !req.body.extension) {
+        resp.sendStatus(400);
+    }
+    db = createdb();
+
+    db.run(`INSERT INTO unis (name, extension) VALUES (?, ?)`, [req.body.name, req.body.extension], (err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            resp.sendStatus(200);
+        }
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+
 app.post('/api/addlecturer', function(req, resp) {
     if (!req.body.name) {
         resp.sendStatus(400);
