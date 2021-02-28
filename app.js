@@ -499,7 +499,7 @@ app.post('/api/addlecturer', function(req, resp) {
 });
 
 
-app.post('api/enroll', function(req, resp) {
+app.post('/api/enroll', function(req, resp) {
     if (!req.body.module_id, !req.session.user_id) {
         resp.sendStatus(400);
     }
