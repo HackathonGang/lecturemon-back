@@ -586,7 +586,7 @@ app.get('/api/surveys', function(req, resp) {
 
 });
 
-function renderTemplate(template, module_code, module_name) {
+function renderTemplate(template, module_code, module_name, module_id) {
     // console.log(template);
     // console.log(module_code);
     // console.log(module_name);
@@ -595,6 +595,7 @@ function renderTemplate(template, module_code, module_name) {
             template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
         }
     }
+    template["target"] = module_id
     // console.log(template);
     return template;
 }
@@ -609,23 +610,24 @@ app.post('/api/createmodulesurvey', function(req, resp) {
                 if (err) {
                     console.error(err);
                     resp.sendStatus(400);
-                    let rendered=renderTemplate(JSON.parse(unescape(row['format'])), row['module_code'], row['module_name']);
+                    let rendered=renderTemplate(JSON.parse(unescape(row['format'])), row['module_code'], row['module_name'], req.body.module_id);
                     db.run(`INSERT INTO surveys (survey_formatted, module_id, template_id) VALUES (?,?,?)`, [escape(JSON.stringify(rendered)), req.body.module_id, req.body.template_id], (err) => {
                         if (err) {
                             console.error(err);
                             resp.sendStatus(400);
                         } else {
                             resp.status(200).json(rendered);
+                            db.close((err) => {
+                                if (err) {
+                                }
+                            });
                         }
                     });
                 }
             });
         });
 
-        db.close((err) => {
-            if (err) {
-            }
-        });
+
     }
 
     db.close((err) => {
@@ -670,7 +672,7 @@ app.get('/api/survey/:survey_id', function(req, resp) {
 
     db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.params.survey_id], (err, row) => {
         if (row != undefined) {
-            resp.status(200).json(unescape(row[0]));
+            resp.status(200).json(JSON.parse(unescape(row[0])));
         } else {
             resp.sendStatus(400);
         }
