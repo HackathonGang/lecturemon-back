@@ -578,14 +578,11 @@ app.post('/api/addmodule', function(req, resp) {
 //     module_code TEXT NOT NULL,
 //     lecturer_id INTEGER NOT NULL
 
-app.get('/api/survey', function(req, resp) {
-    if (!req.session.survey_id) {
-        resp.sendStatus(400);
-    }
+app.get('/api/survey:survey_id', function(req, resp) {
 
     db = createdb();
 
-    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [req.session.survey_id], (err, row) => {
+    db.get(`SELECT survey_formatted FROM surveys WHERE survey_id = ?`, [survey_id], (err, row) => {
         resp.status(200).json(unescape(row[0]));
     });
 
