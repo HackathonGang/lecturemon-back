@@ -466,6 +466,7 @@ app.post('/api/sendsurvey', function(req, resp) {
         db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
             arr.push(row[0]);
         });
+        console.log(arr);
         arr.forEach(user_id => {
             db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, [req.body.survey_id, user_id], (err) => {
                 if (err) {
@@ -476,8 +477,6 @@ app.post('/api/sendsurvey', function(req, resp) {
 
         resp.sendStatus(200);
     });
-
-
 
     db.close((err) => {
         if (err) {
