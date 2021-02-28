@@ -284,7 +284,7 @@ app.post('/api/signin', function(req, resp) {
         else {
             bcrypt.compare(req.body.password, row.password, function(err, result) {
                 if (result) {
-                    req.session.userid = row.user_id;
+                    req.session.user_id = row.user_id;
                     req.session.name = row.first_name + row.last_name;
                     resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
                 }
@@ -390,7 +390,7 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO lecture_responses 
                 (lecture_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`, err => {
+                (?, ?, ?);`, [target, survey_id, req.answers] ,err => {
                     if (err) {
                         console.error(err);
                     }
@@ -407,7 +407,7 @@ app.post('/api/surveyresponse', function(req, resp) {
             db.serialize(() => {
                 db.run(`INSERT INTO module_responses 
                 (module_id, survey_id, response) VALUES 
-                (${target},  "${survey_id}", ${req.answers});`, err => {
+                (?, ?, ?);`, [target, survey_id, req.answers], err => {
                     if (err) {
                         console.error(err);
                     }
@@ -471,6 +471,12 @@ app.get('/api/modules', function(req, resp) {
     });
 });
 
+//Individual Module
+app.get('/api/module', function(req, resp) {
+    db = createdb();
+    db.add(`SELECT`)
+});
+
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
         if (err) {
@@ -508,8 +514,8 @@ function addTemplate(title, description, target, target_type, questions) {
 };
 
 app.get('/api/ping', function(req, resp) {
-   if (req.session.userid) {
-       resp.json({"id": req.session.userid, "name": req.session.name});
+   if (req.session.user_id) {
+       resp.json({"id": req.session.user_id, "name": req.session.name});
    }
    else {
        resp.sendStatus('440');
