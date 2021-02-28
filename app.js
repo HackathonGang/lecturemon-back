@@ -551,6 +551,18 @@ app.get('/api/surveys', function(req, resp) {
 
 });
 
+function renderTemplate(template, module_code, module_name) {
+    console.log(template);
+    console.log(module_code);
+    console.log(module_name);
+    for (let [key, value] of Object.entries(template)) {
+        if (key != "questions") {
+            template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
+        }
+    }
+    return template;
+}
+
 app.post('/api/createmodulesurvey', function(req, resp) {
     db = createdb();
     if (req.body.template_id && req.body.module_id) {
@@ -710,14 +722,7 @@ app.get('/api/module/:module_id', function(req, resp) {
 });
 
 
-function renderTemplate(template, module_code, module_name) {
-    for (let [key, value] of Object.entries(template)) {
-        if (key != "questions") {
-            template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
-        }
-    }
-    return template;
-}
+
 
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
