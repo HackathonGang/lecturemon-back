@@ -45,6 +45,7 @@ db.serialize(() => {
         contact_email TEXT NOT NULL,
         password TEXT NOT NULL,
         year_group INTEGER
+        xp INTEGER NOT NULL
     );`, err => {
         if (err) {
           return console.error(err.message);
@@ -257,8 +258,8 @@ app.post('/api/signup', function(req, resp) {
         db = createdb();
         bcrypt.hash(req.body.password, 10, function(err, hash) {
             db.serialize(() => {
-                db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password)
-                VALUES (?, ?, ?, ?, ?);`, [first_name, last_name, uni_email, contact_email, hash], err => {
+                db.run(`INSERT INTO users (first_name, last_name, uni_email, contact_email, password, xp)
+                VALUES (?, ?, ?, ?, ?, 0);`, [first_name, last_name, uni_email, contact_email, hash], err => {
                     if (err) {
                         return console.error(err.message);
                     }
@@ -279,7 +280,7 @@ app.post('/api/signin', function(req, resp) {
         resp.status(400).json([{"error-field":"password", "error": "Need to enter a password"}]);
     }
     db = createdb();
-    db.get(`SELECT uni_email, password, user_id, first_name, last_name FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
+    db.get(`SELECT uni_email, password, user_id, first_name, last_name, xp FROM users WHERE uni_email = ?`, [req.body.uniemail],  function (err, row) {
         if (row == undefined) {
             resp.status(400).json([{"error-field":"uniemail", "error": "Uni Email not found"}]);
         }
@@ -288,7 +289,8 @@ app.post('/api/signin', function(req, resp) {
                 if (result) {
                     req.session.user_id = row.user_id;
                     req.session.name = row.first_name + row.last_name;
-                    resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id});
+                    req.session.xp = row.xp;
+                    resp.status(200).json({"name": row.first_name+row.last_name, "id":row.user_id, "xp":row.xp});
                 }
                 else {
                     resp.status(400).json([{"error-field":"password", "error": "Incorrect Password"}]);
@@ -400,6 +402,13 @@ app.post('/api/surveyresponse', function(req, resp) {
                         console.error(err);
                     }
                 });
+                db.run(`UPDATE users SET xp = ? WHERE user_id = ?`, [req.session.xp+10, req.session.user_id], err => {
+                    if (err) {
+                        resp.sendStatus(400);
+                        return;
+                    }
+                })
+                req.session.xp += 10;
             });
 
         } else if (target_type == "module") {
@@ -417,6 +426,13 @@ app.post('/api/surveyresponse', function(req, resp) {
                         console.error(err);
                     }
                 });
+                db.run(`UPDATE users SET xp = ? WHERE user_id = ?`, [req.session.xp+10, req.session.user_id], err => {
+                    if (err) {
+                        resp.sendStatus(400);
+                        return;
+                    }
+                })
+                req.session.xp += 10;
             });
 
         } else {
