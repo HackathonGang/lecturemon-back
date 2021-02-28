@@ -452,7 +452,14 @@ app.post('/api/surveyresponse', function(req, resp) {
                         return;
                     }
                 })
-                req.session.xp += 10;
+                req.session.xp += 25;
+                db.get(`SELECT card_id FROM cards WHERE modules_id = ?`, [req.body.module_id], (err, row) => {
+                    db.run(`INSERT INTO card_users (user_id, card_id) VALUES (?, ?)`, [req.session.user_id, row.card_id], err => {
+                        if (err) {
+                            console.error(err);
+                        }
+                    })
+                })
             });
 
         } else {
@@ -889,7 +896,7 @@ app.get('/api/leaderboard', function(req, resp) {
 app.get('/api/getusercards', function(req, resp) {
     var cards = [];
     db = createdb();
-    db.all(`SELECT cards.card_id, card_rarity, module_id, module_name, module_code FROM card_user INNER JOIN cards ON card_user.card_id=cards.card_id WHERE card_user.user_id = 1`, (err, rows) => {
+    db.all(`SELECT cards.card_id, card_rarity, module_id, module_name, module_code FROM card_user INNER JOIN cards ON card_user.card_id=cards.card_id WHERE card_user.user_id = ?`, [req.session.user_id], (err, rows) => {
         console.log(rows);
         if (!rows) {
             resp.sendStatus(400);
@@ -906,7 +913,6 @@ app.get('/api/getusercards', function(req, resp) {
         }
     });
 });
-
 
 function addTemplate(title, description, target, target_type, questions) {
     let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
