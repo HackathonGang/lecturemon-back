@@ -463,33 +463,32 @@ app.post('/api/sendsurvey', function(req, resp) {
 
     let arr = []
     let args = []
-    db.serialize(() => {
-        db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
-            // console.log(row);
-            arr.push(row['user_id']);
-        }, (err, rows) => {
-            console.log(arr);
-            arr.forEach(user_id => {
-                args.push(req.body.survey_id);
-                args.push(user_id);
-            });
-        });
 
+    db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
+        // console.log(row);
+        arr.push(row['user_id']);
+    }, (err, rows) => {
+        console.log(arr);
+        arr.forEach(user_id => {
+            args.push(req.body.survey_id);
+            args.push(user_id);
+        });
         db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, args, (err) => {
             console.log(args); 
             if (err) {
                 console.error(err);
             }
         });
-
-        resp.sendStatus(200);
+        db.close((err) => {
+            if (err) {
+                return console.error(err.message);
+            }
+        });
     });
+    resp.sendStatus(200);
 
-    db.close((err) => {
-        if (err) {
-            return console.error(err.message);
-        }
-    });
+
+
 })
 
 app.post('/api/addlecturer', function(req, resp) {
