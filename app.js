@@ -474,8 +474,9 @@ app.post('/api/sendsurvey', function(req, resp) {
                 args.push(user_id);
             });
         });
-        console.log(args);
+
         db.run(`INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (?,?,0)`, args, (err) => {
+            console.log(args); 
             if (err) {
                 console.error(err);
             }
