@@ -439,7 +439,7 @@ app.post('/api/surveyresponse', function(req, resp) {
 app.post('/api/createsurveytemplate', function(req, resp) {
     db = createdb();
 
-    db.run(`INSERT INTO survey_templates (format), VALUES (?)`, [escape(req.body)], (err) => {
+    db.run(`INSERT INTO survey_templates (format) VALUES (?)`, [escape(req.body)], (err) => {
         if (err) {
             console.error(err);
         } else {
