@@ -556,7 +556,7 @@ function renderTemplate(template, module_code, module_name) {
     // console.log(module_code);
     // console.log(module_name);
     for (let [key, value] of Object.entries(template)) {
-        if (key != "questions") {
+        if (key != "questions" && key != "target") {
             template[key] = value.replace('[code]', module_code).replace('[name]', module_name);
         }
     }
