@@ -458,11 +458,15 @@ app.post('/api/surveyresponse', function(req, resp) {
                         resp.sendStatus(400);
                         return;
                     }
-                    db.run(`INSERT INTO card_users (user_id, card_id) VALUES (?, ?)`, [req.session.user_id, row.card_id], err => {
-                        if (err) {
-                            console.error(err);
-                        }
-                    })
+                    next(row);
+                    function next() {
+                        db.run(`INSERT INTO card_users (user_id, card_id) VALUES (?, ?)`, [req.session.user_id, row.card_id], err => {
+                            if (err) {
+                                console.error(err);
+                            }
+                        })
+                    }
+
                 })
             });
 
