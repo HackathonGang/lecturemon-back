@@ -505,6 +505,9 @@ app.get('/api/module/:module_id', function(req, resp) {
             result['module_name'] = row.module_name;
             result['module_lecturer'] = row.module_lecturer;
             result['module_code'] = row.module_code;
+            if (err) {
+                resp.sendStatus(404);
+            }
         });
         db.all(`SELECT module_responses.response FROM module_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
             var coursework_score = 0;
@@ -522,6 +525,9 @@ app.get('/api/module/:module_id', function(req, resp) {
             result['coursework_score'] = coursework_score;
             result['enjoyability_score'] = enjoyability_score;
             result['difficulty_score'] = difficulty_score;
+            if (err) {
+                resp.sendStatus(404);
+            }
         });
         db.all(`SELECT lecture_responses.response FROM lecture_responses WHERE module_id = ?`, [req.params.module_id], (err, rows) => {
             var lecture_satisfaction = 0;
@@ -531,6 +537,9 @@ app.get('/api/module/:module_id', function(req, resp) {
             lecture_satisfaction = parseFloat((lecture_satisfaction / rows.length).toFixed(1));
             result['lecture_satisfaction'] = lecture_satisfaction;
             resp.status(200).json(result);
+            if (err) {
+                resp.sendStatus(404);
+            }
         });
         db.close((err) => {
             if (err) {
