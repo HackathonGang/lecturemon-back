@@ -578,7 +578,7 @@ app.post('/api/addmodule', function(req, resp) {
 //     module_code TEXT NOT NULL,
 //     lecturer_id INTEGER NOT NULL
 
-app.get('/api/survey:survey_id', function(req, resp) {
+app.get('/api/survey/:survey_id', function(req, resp) {
 
     db = createdb();
 
