@@ -448,15 +448,13 @@ app.post('/api/surveyresponse', function(req, resp) {
                 });
                 db.run(`UPDATE users SET xp = ? WHERE user_id = ?`, [req.session.xp+10, req.session.user_id], err => {
                     if (err) {
-                        resp.sendStatus(400);
-                        return;
+                        console.error(err);
                     }
                 })
                 req.session.xp += 25;
                 db.get(`SELECT card_id FROM cards WHERE module_id = ?`, [req.body.module_id], (err, row) => {
-                    if (!row) {
-                        resp.sendStatus(400);
-                        return;
+                    if (err) {
+                        console.error(err);
                     }
                     next(row);
                     function next() {
