@@ -10,6 +10,7 @@ INSERT INTO modules (uni_id, module_code, lecturer_id, module_name) VALUES (1, "
 INSERT INTO lectures (module_id, start_date_time, end_date_time) VALUES (1, 1614686400, 1614690000);
 
 INSERT INTO module_lookup (user_id, module_id, status) VALUES (1, 1, 0);
+INSERT INTO module_lookup (user_id, module_id, status) VALUES (1, 2, 0);
 
 INSERT INTO users (first_name, last_name, uni_email, contact_email, password) VALUES ("Ben", "Dover", "Michal.Gagala@warwick.ac.uk", "michal.gagala57@gmail.com", "$2b$10$qohOTVa2Tx2j.zD5cgFYLO9wyvqARBqRDEhoO7GTxLzm7ZqCPDzG2");
 INSERT INTO surveys_sent (survey_id, user_id, sent) VALUES (1, 1, 0);
@@ -22,3 +23,9 @@ INSERT INTO lecture_responses (response_id, module_id, lecture_id, survey_id, re
 
 INSERT INTO module_responses (response_id, module_id, survey_id, response) VALUES (1, 1, 1, "[5,1,5,3,4]");
 INSERT INTO module_responses (response_id, module_id, survey_id, response) VALUES (2, 1, 1, "[3,2,5,2,1]");
+
+INSERT INTO cards (card_rarity, module_id, module_name, module_code, name) VALUES (1, 1, 'Wow', 'C2f2f', 'Big Card');
+INSERT INTO cards (card_rarity, module_id, module_name, module_code, name) VALUES (2, 1, 'Wow', 'C2f2f', 'Big Card');
+
+INSERT INTO card_user (user_id, card_id) VALUES (1, 1);
+INSERT INTO card_user (user_id, card_id) VALUES (1, 2);

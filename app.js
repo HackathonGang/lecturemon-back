@@ -169,6 +169,26 @@ db.serialize(() => {
           return console.error(err.message);
         }
     })
+    .run(`CREATE TABLE IF NOT EXISTS cards (
+        card_id INTEGER PRIMARY KEY,
+        card_rarity TEXT NOT NULL,
+        module_id INTEGER NOT NULL,
+        module_name TEXT NOT NULL,
+        module_code TEXT NOT NULL,
+        name TEXT NOT NULL
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
+    .run(`CREATE TABLE IF NOT EXISTS card_user (
+        user_id INTEGER NOT NULL,
+        card_id INTEGER NOT NULL
+    );`, err => {
+        if (err) {
+          return console.error(err.message);
+        }
+    })
     // .get(`SELECT * FROM unis`, function(err, rows) {
     //     console.log(rows);
     // })
@@ -858,6 +878,27 @@ app.get('/api/leaderboard', function(req, resp) {
             users.push({'name': rows[row].first_name + " " + rows[row].last_name, 'xp': rows[row].xp});
         }
         resp.status(200).json(users);
+    });
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });
+});
+
+app.get('/api/getusercards', function(req, resp) {
+    var cards = [];
+    db = createdb();
+    db.all(`SELECT cards.card_id, card_rarity, module_id, module_name, module_code FROM card_user INNER JOIN cards ON card_user.card_id=cards.card_id WHERE card_user.user_id = 1`, (err, rows) => {
+        console.log(rows);
+        if (!rows) {
+            resp.sendStatus(400);
+            return;
+        }
+        for (let row = 0; row < rows.length; row++) {
+            cards.push({'card_id': rows[row].card_id, 'card_rarity': rows[row].card_rarity, 'module_id': rows[row].module_id, 'module_name': rows[row].module_name, 'module_code':rows[row].module_code});
+        }
+        resp.status(200).json(cards);
     });
     db.close((err) => {
         if (err) {
