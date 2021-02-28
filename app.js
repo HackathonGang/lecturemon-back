@@ -464,7 +464,7 @@ app.post('/api/sendsurvey', function(req, resp) {
     let arr = []
     db.serialize(() => {
         db.each(`SELECT user_id FROM module_lookup WHERE module_id = ? AND status = 0`, [req.body.module_id], (err, row) => {
-            arr.push(row[0]);
+            arr.push(row['user_id']);
         });
         console.log(arr);
         arr.forEach(user_id => {
