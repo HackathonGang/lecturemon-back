@@ -855,7 +855,7 @@ app.get('/api/leaderboard', function(req, resp) {
             return;
         }
         for (let row = 0; row < rows.length; row++) {
-            users.push({'name': rows[row].first_name + rows[row].last_name, 'xp': rows[row].xp});
+            users.push({'name': rows[row].first_name + " " + rows[row].last_name, 'xp': rows[row].xp});
         }
         resp.status(200).json(users);
     });
