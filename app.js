@@ -435,11 +435,16 @@ app.post('/api/surveyresponse', function(req, resp) {
 //List of Surveys
 app.get('/api/surveys', function(req, resp) {
     if (!req.session.user_id) {
-        resp.sendStatus("440");
+        resp.sendStatus(400);
     }
-
-    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [req.session.user_id], (err, rows) => {
-        console.log(rows);
+    db = createdb();
+    db.all(`SELECT surveys.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, rows) => {
+        let json = JSON.parse(unescape(rows[0]));
+    });
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
     });
 });
 
@@ -448,13 +453,19 @@ app.get('/api/modules', function(req, resp) {
     if (!req.session.user_id) {
         resp.sendStatus(400);
     }
-
+    db = createdb();
     db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
         modules = [];
         rows.forEach((row) => {
             modules.push({'module_id':row.module_id, 'module_name':row.module_name, 'module_lecturer':row.module_lecturer, 'module_code':row.module_code});
         });
         json.status(200).json(modules);
+    });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
     });
 });
 
