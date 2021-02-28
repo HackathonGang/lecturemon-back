@@ -436,10 +436,17 @@ app.get('/api/surveys', function(req, resp) {
     // }
     // let user_id = req.session.user_id;
     let user_id = 1;
+    db = createdb();
 
-    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ${user_id}`, (err, rows) => {
-        console.log(rows);
+    db.all(`SELECT surveys.survey_id, format FROM surveys INNER JOIN surveys_sent ON surveys.survey_id=surveys_sent.survey_id INNER JOIN survey_templates ON survey_templates.template_id = surveys.survey_template WHERE surveys_sent.sent=0 AND surveys_sent.user_id=?;`, [user_id], (err, rows) => {
+        let json = JSON.parse(unescape(rows[0]));
     });
+
+    db.close((err) => {
+        if (err) {
+            return console.error(err.message);
+        }
+    });    
 });
 
 function addTemplate(title, description, target, target_type, questions) {
