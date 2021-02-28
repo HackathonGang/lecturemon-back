@@ -479,15 +479,16 @@ app.post('/api/sendsurvey', function(req, resp) {
                 console.error(err);
             }
         });
+        db.close((err) => {
+            if (err) {
+                return console.error(err.message);
+            }
+        });
     });
-        resp.sendStatus(200);
+    resp.sendStatus(200);
 
 
-    db.close((err) => {
-        if (err) {
-            return console.error(err.message);
-        }
-    });
+
 })
 
 app.post('/api/addlecturer', function(req, resp) {
