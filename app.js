@@ -62,6 +62,7 @@ db.serialize(() => {
     .run(`CREATE TABLE IF NOT EXISTS modules (
         module_id INTEGER PRIMARY KEY,
         uni_id INTEGER NOT NULL,
+        module_name TEXT NOT NULL,
         module_code TEXT NOT NULL,
         lecturer_id INTEGER NOT NULL
     );`, err => {
@@ -431,23 +432,29 @@ app.post('/api/surveyresponse', function(req, resp) {
 
 });
 
+//List of Surveys
 app.get('/api/surveys', function(req, resp) {
-    if (!req.session.id) {
+    if (!req.session.user_id) {
         resp.sendStatus("440");
     }
 
-    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
+    db.all(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [req.session.user_id], (err, rows) => {
         console.log(rows);
     });
 });
 
+//List of Modules
 app.get('/api/modules', function(req, resp) {
-    if (!req.session.id) {
-        resp.sendStatus("440");
+    if (!req.session.user_id) {
+        resp.sendStatus(400);
     }
 
-    db.all(sele)(`SELECT (survey_template, survey_id) FROM surveys INNER JOIN surveys_sent ON survey_id IF surveys_sent.sent = 0 AND surveys_sent.userid = ?`, [user_id], (err, rows) => {
-        console.log(rows);
+    db.all(`SELECT module_lookup.module_id, modules.module_name, lecturers.name AS module_lecturer, modules.module_code FROM module_lookup INNER JOIN modules ON module_lookup.module_id=modules.module_id INNER JOIN lecturers ON modules.lecturer_id=lecturers.lecturer_id WHERE module_lookup.status = 0 AND module_lookup.user_id = ?`, [req.session.user_id], (err, rows) => {
+        modules = [];
+        rows.forEach((row) => {
+            modules.push({'module_id':row.module_id, 'module_name':row.module_name, 'module_lecturer':row.module_lecturer, 'module_code':row.module_code});
+        });
+        json.status(200).json(modules);
     });
 });
 
